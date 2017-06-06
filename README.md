@@ -1,1 +1,1 @@
-"# Capstone" 
+"Placeholder for Capstone project" 
