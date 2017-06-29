@@ -208,7 +208,7 @@ class BasicEnglishTranslator():
 
     def load_dictionary(self):
         '''Loads the dictionary...'''
-        return pickle.load(open('./data/basic_english.pickle', "rb"))
+        return pickle.load(open('../data/basic_english.pickle', "rb"))
 
     def make_new_dictionary(self):
         '''
@@ -222,7 +222,7 @@ class BasicEnglishTranslator():
 
         print len(basic_english)
         # adding contractions...
-        contractions_df = pd.read_csv('./data/contractions.csv', sep=' -')
+        contractions_df = pd.read_csv('../data/contractions.csv', sep=' -')
         contractions = [word for word in contractions_df['from']]
         contractions[18] = "mightn't"
         st = LancasterStemmer()
@@ -276,7 +276,7 @@ class BasicEnglishTranslator():
         Ogden's 850 basic english words.
         '''
         # Convert basic english words to a list
-        basic_english_df = pd.read_csv('./data/basic_english_wordlist.csv')
+        basic_english_df = pd.read_csv('../data/basic_english_wordlist.csv')
         print basic_english_df.head()
         basic_english = [a for a in basic_english_df['WORD']]
         # add the various conjugations of 'to be' and 'a'
@@ -383,7 +383,7 @@ if __name__ == '__main__':
     articles = {}
     lst = ['/wiki/Horse']
     model = gensim.models.KeyedVectors.load_word2vec_format(
-            './model/GoogleNews-vectors-negative300.bin', binary=True)
+            '../model/GoogleNews-vectors-negative300.bin', binary=True)
     save_dic = None
     for item in lst:
         translator = BasicEnglishTranslator(model, basic_dictionary=save_dic)
@@ -413,23 +413,23 @@ if __name__ == '__main__':
         # Load in sentences
 
         try:
-            sentences = pickle.load(open('./data/sentences.pickle', "rb"))
+            sentences = pickle.load(open('../data/sentences.pickle', "rb"))
         except:
             print 'load failed'
             sentences = []  # Initialize an empty list of sentences
         MyText = MyText.encode('ascii', 'replace')
         sentences += book_to_sentences(MyText, tokenizer)
 
-        with open('./data/sentences.pickle', 'wb') as handle:
+        with open('../data/sentences.pickle', 'wb') as handle:
             pickle.dump(sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
         translator.fit(MyText)
         articles[item.replace('/wiki/','')] = [translator.basic_text,
                                                translator.basic_list,
                                                translator.real_text,
                                                translator.real_list]
-        with open('./data/articles.pickle', 'wb') as handle:
+        with open('../data/articles.pickle', 'wb') as handle:
             pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
         save_dic = translator.save_dictionary
 train_dict = translator.save_dictionary
-with open('./data/training.pickle', 'wb') as handle:
+with open('../data/training.pickle', 'wb') as handle:
     pickle.dump(train_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
