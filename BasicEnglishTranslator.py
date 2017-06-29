@@ -1,13 +1,18 @@
 import pandas as pd
 import cPickle as pickle
+import nltk.data
+from nltk import pos_tag, word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 from gensim.models import Word2Vec
 import gensim as gensim
 import string
 import re
-import nltk.data
 import time
+from bs4 import BeautifulSoup
+import requests
+import sys
+from math import sqrt
 
 
 class BasicEnglishTranslator():
@@ -45,8 +50,6 @@ class BasicEnglishTranslator():
         '''
         Initializer.  Takes the real_text as an input string.
         '''
-        # Text
-        self.real_text = real_text
         # model
         if type(model) == gensim.models.keyedvectors.KeyedVectors:
             self.model = model
@@ -60,13 +63,13 @@ class BasicEnglishTranslator():
             self.class_dictionary = basic_dictionary
         else:  # load our vetted dictionary...
             try:
-                self.class_dictionary = load_dictionary()
+                self.class_dictionary = self.load_dictionary()
             except:
-                self.class_dictionary = make_new_dictionary()
+                self.class_dictionary = self.make_new_dictionary()
         # Threshold
         self.threshold = threshold
 
-    def fit(real_text):
+    def fit(self, input_text):
         '''
         The actual translation occurs here:
 
@@ -77,8 +80,8 @@ class BasicEnglishTranslator():
 
         Input: String
         '''
-        if threshold == 0:
-            threshold = 10.0/sqrt(len(input_text))
+        self.real_text = input_text
+        threshold = self.threshold
         done = 0
         # timer...
         start = time.clock()
@@ -86,7 +89,7 @@ class BasicEnglishTranslator():
         input_text = ''.join([a if ord(a) < 128 else ''
                               for a in list(input_text)])
         words = pos_tag(word_tokenize(input_text))  # makes a list of words...
-
+        self.real_list = words
         # These simply pass thru the model
         pass_thru = ['CD',  # CD: numeral, cardinal
                      'EX',  # EX: existential there
@@ -150,11 +153,11 @@ class BasicEnglishTranslator():
                 # already simple... throw it in and move
                 if clean in self.class_dictionary.keys():
                     temp = self.class_dictionary[clean][0]
-                    lst_ret.append(retain_capitalization(temp, word[0]))
+                    lst_ret.append(self.retain_capitalization(temp, word[0]))
                 elif clean != '':  # not alread simply/basic...
                     start_this = time.clock()  # timing for testing
                     try:  # in case it fails...
-                        lst = list(set(Google_model.most_similar(clean)))
+                        lst = list(set(self.model.most_similar(clean)))
                         done = 0
                         n = 0
                         while done == 0:
@@ -171,40 +174,41 @@ class BasicEnglishTranslator():
                                 self.class_dictionary[clean] = [tmp, ccln]
                                 # add to lst
                                 lst_ret.append(
-                                    retain_capitalization(
+                                    self.retain_capitalization(
                                         self.class_dictionary[clean][0],
                                         word[0]))
                             else:
                                 # add all similar words to that to the lst
                                 if time.clock() - start_this < threshold:
                                     [lst.append(a) for a in
-                                     model.most_similar(check, topn=3)
+                                     self.model.most_similar(check, topn=3)
                                      if a not in lst]
                                 else:  # timeout!
                                     done = 1
                                     cln = clean.lower()
                                     self.class_dictionary[clean] = [cln, cln]
                                     lst_ret.append(
-                                        retain_capitalization(
+                                        self.retain_capitalization(
                                             self.class_dictionary[clean][0],
                                             word[0]))
                     except:
-                        lst_ret.append(retain_capitalization(word[0], word[0]))
+                        a = word[0]
+                        lst_ret.append(self.retain_capitalization(a, a))
                         temp = word[0].lower()
                         self.class_dictionary[temp] = [temp, None]
         end = time.clock()
         print 'Time: {:.2f}s'.format(end-start)
-        txt = replace_punctuation(' '.join(lst_ret))
+        txt = self.replace_punctuation(' '.join(lst_ret))
         txt = txt.encode('utf-8')
         txt = re.sub("\xe2\x80\x93", "-", txt)
         self.basic_list = lst_ret
         self.basic_text = txt
 
-    def load_dictionary():
+    def load_dictionary(self):
         '''Loads the dictionary...'''
         return pickle.load(open('data/basic_english.pickle', "rb"))
 
-    def make_new_dictionary():
+    def make_new_dictionary(self):
         '''
         This means the data file associated with this particular instance does
         not have a 'data/basic_english.pickle' file associated with it, and
@@ -256,7 +260,7 @@ class BasicEnglishTranslator():
             my_dict["a"] = ['a', 'a']
             return my_dict
 
-    def get_basic_english():
+    def get_basic_english(self):
         '''
         Creates a list of basic english words from a csv file containing
         Ogden's 850 basic english words.
@@ -295,7 +299,7 @@ class BasicEnglishTranslator():
         basic_english[basic_english.index('colour')] = 'color'
         return basic_english
 
-    def retain_capitalization(new_word, original_word):
+    def retain_capitalization(self, new_word, original_word):
         '''
         Checks the original_word for capitalization, if it has it, capitalizes
         the frst letter of new_word, returns new_word.
@@ -306,7 +310,7 @@ class BasicEnglishTranslator():
             new_word = ''.join(lst)
         return new_word
 
-    def replace_punctuation(text):
+    def replace_punctuation(self, text):
         '''
         Tokenizing takes the punctuation as it's own item in the list.
         This takes the created string and replaces all 'end ?' with 'end?'
@@ -325,4 +329,85 @@ class BasicEnglishTranslator():
         return text
 
 
+# external to class for the sake of saving model stuff
+# Define a function to split a book into parsed sentences
+def book_to_sentences(input_text, tokenizer, remove_stopwords=False):
+    # Function to split a review into parsed sentences. Returns a
+    # list of sentences, where each sentence is a list of words
+    #
+    # 1. Use the NLTK tokenizer to split the paragraph into sentences
+    raw_sentences = tokenizer.tokenize(
+                    input_text.encode("ascii", "replace").strip())
+    #
+    # 2. Loop over each sentence
+    sentences = []
+    for raw_sentence in raw_sentences:
+        # If a sentence is empty, skip it
+        if len(raw_sentence) > 0:
+            # Otherwise, call review_to_wordlist to get a list of words
+            sentences.append(book_to_wordlist(raw_sentence, remove_stopwords))
+    #
+    # Return the list of sentences (each sentence is a list of words,
+    # so this returns a list of lists
+    return sentences
+
+
+def book_to_wordlist(book_text, remove_stopwords=False):
+    # Function to convert a document to a sequence of words,
+    # optionally removing stop words.  Returns a list of words.
+    # 3. Convert words to lower case and split themstring.decode('utf-8')
+    words = book_text.lower().split()
+    #
+    # 4. Optionally remove stop words (false by default)
+    if remove_stopwords:
+        stops = set(stopwords.words("english"))
+        words = [w for w in words if w not in stops]
+    #
+    # 5. Return a list of words
+    return words
+
+
 if __name__ == '__main__':
+    lst = ['Horse']
+    model = gensim.models.KeyedVectors.load_word2vec_format(
+            './model/GoogleNews-vectors-negative300.bin', binary=True)
+    translator = BasicEnglishTranslator(model)
+    for item in lst:
+        r = requests.get('https://simple.wikipedia.org/wiki/'+item)
+        soup = BeautifulSoup(r.content, 'html.parser')
+        tags = soup.find_all('p')
+        MyText = '\n'.join([tag.get_text() for tag in tags])
+
+        # Initialize the "CountVectorizer" object, which is scikit-learn's
+        # bag of words tool.
+        vectorizer = CountVectorizer(analyzer="word",
+                                     tokenizer=None,
+                                     preprocessor=None,
+                                     stop_words=None,
+                                     max_features=5000)
+
+        # fit_transform() does two functions: First, it fits the model
+        # and learns the vocabulary; second, it transforms our training data
+        # into feature vectors. The input to fit_transform should be a list of
+        # strings.
+        features = vectorizer.fit_transform([MyText])
+        # Numpy arrays are easy to work with, so convert the result to an
+        # array
+        features = features.toarray()
+        vocab = vectorizer.get_feature_names()
+        # Load the punkt tokenizer
+        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+        # Load in sentences
+
+        try:
+            sentences = pickle.load(open('data/sentences.pickle', "rb"))
+        except:
+            print 'load failed'
+            sentences = []  # Initialize an empty list of sentences
+        MyText = MyText.encode('ascii', 'replace')
+        sentences += book_to_sentences(MyText, tokenizer)
+
+        with open('data/sentences.pickle', 'wb') as handle:
+            pickle.dump(sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        translator.fit(MyText)
+        print translator.basic_text
