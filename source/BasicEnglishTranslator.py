@@ -58,16 +58,16 @@ class BasicEnglishTranslator():
         # Dictionary
         # check valid dictionary
         if ((type(basic_dictionary) == dict) and
-                (len(basic_dictionary.values[0]) == 2)):
+                (len(basic_dictionary.values()[0]) == 3)):
             self.class_dictionary = basic_dictionary
         else:  # load our vetted dictionary...
             try:
                 self.class_dictionary = self.load_dictionary()
             except:
-                self.class_dictionary = self.make_new_dictionary()
+                raise KeyError('No keys since there is no dictionary.')
         # Threshold
         self.threshold = threshold
-        self.save_dictionary = self.class_dictionary
+        self.save_dictionary = self.class_dictionary.copy()
 
     def fit(self, input_text):
         '''
@@ -214,109 +214,6 @@ class BasicEnglishTranslator():
         '''Loads the dictionary...'''
         return pickle.load(open('../data/basic_english.pickle', "rb"))
 
-    def make_new_dictionary(self):
-        '''
-        This means the data file associated with this particular instance does
-        not have a 'data/basic_english.pickle' file associated with it, and
-        we need to make one.
-        '''
-        print 'Running...'
-        vocab_google = model.vocab.keys()
-        basic_english = self.get_basic_english()
-
-        print len(basic_english)
-        # adding contractions...
-        contractions_df = pd.read_csv('../data/contractions.csv', sep=' -')
-        contractions = [word for word in contractions_df['from']]
-        contractions[18] = "mightn't"
-        st = LancasterStemmer()
-        stem_gn = [st.stem(key) for key in self.model.vocab.keys()]
-        stem_se = [st.stem(word) for word in basic_english]
-        my_dict = {}
-        threshold = 0.2  # much smaller and it grabs weird things
-        for sim_in in xrange(len(basic_english)):
-            print '{} of {}'.format(sim_in, len(basic_english))
-            indices = []
-            check = []
-            if len(basic_english[sim_in]) >= 2:
-                indices = [i for i, s in enumerate(stem_gn)
-                           if stem_se[sim_in] == s]
-                check = [i for i, s in enumerate(vocab_google)
-                         if basic_english[sim_in] == s]
-            # check, indices
-            if len(check) > 0:
-                for index in indices:
-                    a = threshold
-                    if (self.model.similarity(basic_english[sim_in],
-                                              vocab_google[index]) >= a):
-                        my_dict[vocab_google[index].lower()] = \
-                                [vocab_google[index].lower(),
-                                 basic_english[sim_in].lower(),
-                                 pos_tag([vocab_google[index].lower()])[0][1]]
-                    # add itself last... to overwrite issues w/above
-                a = basic_english[sim_in].lower()
-                b = pos_tag([a.lower()])[0][1]
-                my_dict[basic_english[sim_in].lower()] = [a, a, b]
-
-        my_dict['i'] = ['i', 'i', pos_tag(['i'])[0][1]]  # add 'I
-        basic_english.append('i')
-        for word in basic_english:
-            wordy = word
-            if len(word) <= 1:
-                wordy = word + "'"
-            for con in contractions:
-                if wordy.lower() in con.lower()[0:len(wordy)]:
-                    my_dict[con.lower()] = [con.lower(), wordy.lower(),
-                                            pos_tag([wordy.lower()])[0][1]]
-        # these need adding/fixing
-        my_dict["am"] = ['am', 'am']
-        my_dict["a"] = ['a', 'a']
-        # Save it...
-        with open('../data/basic_english.pickle', 'wb') as handle:
-            pickle.dump(my_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        return my_dict
-
-    def get_basic_english(self):
-        '''
-        Creates a list of basic english words from a csv file containing
-        Ogden's 850 basic english words.
-        '''
-        # Convert basic english words to a list
-        basic_english_df = pd.read_csv('../data/basic_english_wordlist.csv')
-        print basic_english_df.head()
-        basic_english = [a for a in basic_english_df['WORD']]
-        # add the various conjugations of 'to be' and 'a'
-        basic_english.append('an')
-        basic_english.append('is')
-        basic_english.append('was')
-        basic_english.append('are')
-        basic_english.append('were')
-        basic_english.append('they')
-        # 'I' causes weird issues...
-        basic_english[basic_english.index('I')] = 'big'
-        basic_english.append('she')
-        basic_english.append('hers')
-        basic_english.append('his')
-        basic_english.append('my')
-        basic_english.append('him')
-        basic_english.append('her')
-        basic_english.append('your')
-        basic_english.append('their')
-        basic_english.append('might')
-        basic_english.append('must')
-        basic_english.append('can')
-        basic_english.append('did')
-        basic_english.append('could')
-        basic_english.append('should')
-        basic_english.append('would')
-        basic_english.append('that')
-        basic_english.append('what')
-        basic_english.append('we')
-        basic_english.append('small')
-        basic_english[basic_english.index('colour')] = 'color'
-        print 'basic_english has {} words'.format(len(basic_english))
-        return basic_english
-
     def retain_capitalization(self, new_word, original_word):
         '''
         Checks the original_word for capitalization, if it has it, capitalizes
@@ -387,11 +284,40 @@ def book_to_wordlist(book_text, remove_stopwords=False):
 
 if __name__ == '__main__':
     articles = {}
-    lst = ['/wiki/Horse']
+    lst = [u'/wiki/Vocabulary', u'/wiki/Democracy', u'/wiki/Execution',
+           u'/wiki/Architecture', u'/wiki/Communication', u'/wiki/Electronics',
+           u'/wiki/Engineering', u'/wiki/Farming', u'/wiki/Health',
+           u'/wiki/Industry', u'/wiki/Medicine', u'/wiki/Transport',
+           u'/wiki/Weather', u'/wiki/Anthropology', u'/wiki/Archaeology',
+           u'/wiki/Geography', u'/wiki/Education', u'/wiki/History',
+           u'/wiki/Language', u'/wiki/Philosophy', u'/wiki/Psychology',
+           u'/wiki/Sociology', u'/wiki/Teaching',  u'/wiki/Animation',
+           u'/wiki/Art', u'/wiki/Book', u'/wiki/Cooking',
+           u'/wiki/Custom', u'/wiki/Culture', u'/wiki/Dance',
+           u'/wiki/Family', u'/wiki/Game',  u'/wiki/Gardening',
+           u'/wiki/Leisure', u'/wiki/Movie', u'/wiki/Music',
+           u'/wiki/Radio',  u'/wiki/Sport', u'/wiki/Theatre',
+           u'/wiki/Travel', u'/wiki/Television', u'/wiki/Algebra',
+           u'/wiki/Astronomy', u'/wiki/Biology', u'/wiki/Chemistry',
+           u'/wiki/Ecology', u'/wiki/Geometry', u'/wiki/Mathematics',
+           u'/wiki/Physics', u'/wiki/Statistics', u'/wiki/Zoology',
+           u'/wiki/Copyright', u'/wiki/Economics', u'/wiki/Government',
+           u'/wiki/Law', u'/wiki/Military', u'/wiki/Politics',
+           u'/wiki/Trade', u'/wiki/Atheism', u'/wiki/Buddhism',
+           u'/wiki/Christianity', u'/wiki/Esotericism', u'/wiki/Hinduism',
+           u'/wiki/Islam', u'/wiki/Jainism', u'/wiki/Judaism',
+           u'/wiki/Mythology', u'/wiki/Paganism', u'/wiki/Sect',
+           u'/wiki/Sikhism', u'/wiki/Taoism', u'/wiki/Theology',
+           u'/wiki/Horse', u'/wiki/France', u'/wiki/French_Revolution',
+           u'/wiki/Sword', u'/wiki/Gun', u'/wiki/War']
     model = gensim.models.KeyedVectors.load_word2vec_format(
             '../model/GoogleNews-vectors-negative300.bin', binary=True)
-    save_dic = None
-    for item in lst:
+    try:
+        save_dic = pickle.load(open('../data/training.pickle', 'rb'))
+    except:
+        save_dic = None
+    sentences = []
+    for i, item in enumerate(lst):
         translator = BasicEnglishTranslator(model, basic_dictionary=save_dic)
         r = requests.get('https://simple.wikipedia.org'+item)
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -417,25 +343,29 @@ if __name__ == '__main__':
         # Load the punkt tokenizer
         tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
         # Load in sentences
-
-        try:
-            sentences = pickle.load(open('../data/sentences.pickle', "rb"))
-        except:
-            sentences = []  # Initialize an empty list of sentences
         MyText = MyText.encode('ascii', 'replace')
+        try:
+            sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
+        except:
+            print 'eh'
         sentences += book_to_sentences(MyText, tokenizer)
-
         with open('../data/sentences.pickle', 'wb') as handle:
             pickle.dump(sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        sentences = []
         translator.fit(MyText)
+        try:
+            aticles = pickle.load(open('../data/sentences.pickle', 'rb'))
+        except:
+            print 'eh'
         articles[item.replace('/wiki/', '')] = [translator.basic_text,
                                                 translator.basic_list,
                                                 translator.real_text,
                                                 translator.real_list]
+
         with open('../data/articles.pickle', 'wb') as handle:
             pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        articles = {}
         save_dic = translator.save_dictionary
-    train_dict = translator.save_dictionary
-    with open('../data/training.pickle', 'wb') as handle:
-        pickle.dump(train_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    print 'Hi'
+        with open('../data/training.pickle', 'wb') as handle:
+            pickle.dump(save_dic, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        print "{} items in save_dictionary".format(len(save_dic.keys()))
