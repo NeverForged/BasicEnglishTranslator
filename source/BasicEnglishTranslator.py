@@ -45,7 +45,7 @@ class BasicEnglishTranslator():
     class_dictionary: the used dictionary with additional translation steps
                       included, if any
     '''
-    def __init__(self, model, basic_dictionary=None, threshold=0.5):
+    def __init__(self, model, basic_dictionary=None, threshold=0.25):
         '''
         Initializer.  Takes the real_text as an input string.
         '''
@@ -151,23 +151,22 @@ class BasicEnglishTranslator():
                 clean = word[0].strip(string.punctuation).lower()
                 # ...and bring it to the function
                 # already simple... throw it in and move
-                if clean in self.class_dictionary.keys():
+                if clean in self.class_dictionary:
                     temp = self.class_dictionary[clean][0]
                     lst_ret.append(self.retain_capitalization(temp, word[0]))
-                elif clean != '':  # not alread simply/basic...
-                    start_this = time.clock()  # timing for testing
+                elif clean != '':  # not alread simply/basic..
                     try:  # in case it fails...
+                        start_this = time.clock()
                         lst = list(set(self.model.most_similar(clean)))
                         done = 0
                         n = 0
-                        keys = self.class_dictionary.keys()
                         while done == 0:
                             check = list(lst)[n][0]
                             n += 1
                             check_clean = check.strip(string.punctuation)
                             ccln = check_clean.lower()
                             b = pos_tag([ccln])[0][1]
-                            if ((ccln in keys) and (b == word[1])):
+                            if ccln in self.class_dictionary and b == word[1]:
                                 done = 1
                                 # add to dictionary...based on what's there,
                                 # retaining grouping info
@@ -283,6 +282,7 @@ def book_to_wordlist(book_text, remove_stopwords=False):
 
 
 if __name__ == '__main__':
+    start =  time.clock()
     articles = {}
     lst = [u'/wiki/Vocabulary', u'/wiki/Democracy', u'/wiki/Execution',
            u'/wiki/Architecture', u'/wiki/Communication', u'/wiki/Electronics',
@@ -317,7 +317,9 @@ if __name__ == '__main__':
     except:
         save_dic = None
     sentences = []
+    print 'this took {}s'.format(time.clock()-start)
     for i, item in enumerate(lst):
+        start = time.clock()
         translator = BasicEnglishTranslator(model, basic_dictionary=save_dic)
         r = requests.get('https://simple.wikipedia.org'+item)
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -347,7 +349,7 @@ if __name__ == '__main__':
         try:
             sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
         except:
-            print 'eh'
+            print 'No sentences saved.'
         sentences += book_to_sentences(MyText, tokenizer)
         with open('../data/sentences.pickle', 'wb') as handle:
             pickle.dump(sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -368,4 +370,5 @@ if __name__ == '__main__':
         save_dic = translator.save_dictionary
         with open('../data/training.pickle', 'wb') as handle:
             pickle.dump(save_dic, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        print "{} items in save_dictionary".format(len(save_dic.keys()))
+        end = time.clock()-start
+        print "{} of {}: {}s".format(i, len(lst), end)
