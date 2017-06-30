@@ -45,8 +45,7 @@ class BasicEnglishTranslator():
     class_dictionary: the used dictionary with additional translation steps
                       included, if any
     '''
-    def __init__(self, model, basic_dictionary=None,
-                 threshold=0.5):
+    def __init__(self, model, basic_dictionary=None, threshold=0.5):
         '''
         Initializer.  Takes the real_text as an input string.
         '''
@@ -161,24 +160,27 @@ class BasicEnglishTranslator():
                         lst = list(set(self.model.most_similar(clean)))
                         done = 0
                         n = 0
+                        keys = self.class_dictionary.keys()
                         while done == 0:
                             check = list(lst)[n][0]
                             n += 1
                             check_clean = check.strip(string.punctuation)
-                            check_clean = check_clean.lower()
-                            if check_clean in self.class_dictionary.keys():
+                            ccln = check_clean.lower()
+                            b = pos_tag([ccln])[0][1]
+                            if ((ccln in keys) and (b == word[1])):
                                 done = 1
                                 # add to dictionary...based on what's there,
                                 # retaining grouping info
                                 ccln = check_clean.lower()
                                 tmp = self.class_dictionary[check_clean][0]
-                                self.class_dictionary[clean] = [tmp, ccln]
+                                a = pos_tag([tmp])[0][1]
+                                self.class_dictionary[clean] = [tmp, ccln, a]
                                 # add to lst
                                 lst_ret.append(
                                     self.retain_capitalization(
                                         self.class_dictionary[clean][0],
                                         word[0]))
-                                self.save_dictionary[clean] = [tmp, ccln]
+                                self.save_dictionary[clean] = [tmp, ccln, a]
                             else:
                                 # add all similar words to that to the lst
                                 if time.clock() - start_this < threshold:
@@ -187,8 +189,10 @@ class BasicEnglishTranslator():
                                      if a not in lst]
                                 else:  # timeout!
                                     done = 1
-                                    cln = clean.lower()
-                                    self.class_dictionary[clean] = [cln, cln]
+                                    cl = clean.lower()
+                                    a = pos_tag([cln])[0][1]
+                                    self.class_dictionary[clean] = [cl, cl, a]
+
                                     lst_ret.append(
                                         self.retain_capitalization(
                                             self.class_dictionary[clean][0],
@@ -197,7 +201,7 @@ class BasicEnglishTranslator():
                         a = word[0]
                         lst_ret.append(self.retain_capitalization(a, a))
                         temp = word[0].lower()
-                        self.class_dictionary[temp] = [temp, None]
+                        self.class_dictionary[temp] = [temp, None, word[1]]
         end = time.clock()
         print 'Time: {:.2f}s'.format(end-start)
         txt = self.replace_punctuation(' '.join(lst_ret))
@@ -230,45 +234,47 @@ class BasicEnglishTranslator():
         stem_se = [st.stem(word) for word in basic_english]
         my_dict = {}
         threshold = 0.2  # much smaller and it grabs weird things
-        for sim_in in xrange(1, len(basic_english), 1):
-            print
-            print '{}: {}'.format(sim_in, basic_english[sim_in])
-            print '*'*17
-            indices = [i for i, s in enumerate(stem_gn)
-                       if stem_se[sim_in] == s]
-            check = [i for i, s in enumerate(vocab_google)
-                     if basic_english[sim_in] == s]
+        for sim_in in xrange(len(basic_english)):
+            print '{} of {}'.format(sim_in, len(basic_english))
+            indices = []
+            check = []
+            if len(basic_english[sim_in]) >= 2:
+                indices = [i for i, s in enumerate(stem_gn)
+                           if stem_se[sim_in] == s]
+                check = [i for i, s in enumerate(vocab_google)
+                         if basic_english[sim_in] == s]
             # check, indices
             if len(check) > 0:
                 for index in indices:
+                    a = threshold
                     if (self.model.similarity(basic_english[sim_in],
-                                                vocab_google[index]) >=
-                            threshold):
-                        print '{} -> {}'.format(vocab_google[index],
-                                                self.model.similarity(
-                                                basic_english[sim_in],
-                                                vocab_google[index]))
+                                              vocab_google[index]) >= a):
                         my_dict[vocab_google[index].lower()] = \
-                               [vocab_google[index].lower(),
-                                basic_english[sim_in].lower()]
-            # add itself last... to overwrite issues w/above
-            my_dict[basic_english[sim_in].lower()] = \
-                   [basic_english[sim_in].lower(),
-                    basic_english[sim_in].lower()]
+                                [vocab_google[index].lower(),
+                                 basic_english[sim_in].lower(),
+                                 pos_tag([vocab_google[index].lower()])[0][1]]
+                    # add itself last... to overwrite issues w/above
+                a = basic_english[sim_in].lower()
+                b = pos_tag([a.lower()])[0][1]
+                my_dict[basic_english[sim_in].lower()] = [a, a, b]
 
-            my_dict['i'] = ['i', 'i']  # add 'I
-            basic_english.append('i')
-            for word in basic_english:
-                wordy = word
-                if len(word) <= 1:
-                    wordy = word+"'"
-                for con in contractions:
-                    if wordy.lower() in con.lower()[0:len(wordy)]:
-                        my_dict[con.lower()] = [con.lower(), word.lower()]
-            # these need adding/fixing
-            my_dict["am"] = ['am', 'am']
-            my_dict["a"] = ['a', 'a']
-            return my_dict
+        my_dict['i'] = ['i', 'i', pos_tag(['i'])[0][1]]  # add 'I
+        basic_english.append('i')
+        for word in basic_english:
+            wordy = word
+            if len(word) <= 1:
+                wordy = word + "'"
+            for con in contractions:
+                if wordy.lower() in con.lower()[0:len(wordy)]:
+                    my_dict[con.lower()] = [con.lower(), wordy.lower(),
+                                            pos_tag([wordy.lower()])[0][1]]
+        # these need adding/fixing
+        my_dict["am"] = ['am', 'am']
+        my_dict["a"] = ['a', 'a']
+        # Save it...
+        with open('../data/basic_english.pickle', 'wb') as handle:
+            pickle.dump(my_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        return my_dict
 
     def get_basic_english(self):
         '''
@@ -415,7 +421,6 @@ if __name__ == '__main__':
         try:
             sentences = pickle.load(open('../data/sentences.pickle', "rb"))
         except:
-            print 'load failed'
             sentences = []  # Initialize an empty list of sentences
         MyText = MyText.encode('ascii', 'replace')
         sentences += book_to_sentences(MyText, tokenizer)
@@ -423,13 +428,14 @@ if __name__ == '__main__':
         with open('../data/sentences.pickle', 'wb') as handle:
             pickle.dump(sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
         translator.fit(MyText)
-        articles[item.replace('/wiki/','')] = [translator.basic_text,
-                                               translator.basic_list,
-                                               translator.real_text,
-                                               translator.real_list]
+        articles[item.replace('/wiki/', '')] = [translator.basic_text,
+                                                translator.basic_list,
+                                                translator.real_text,
+                                                translator.real_list]
         with open('../data/articles.pickle', 'wb') as handle:
             pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
         save_dic = translator.save_dictionary
-train_dict = translator.save_dictionary
-with open('../data/training.pickle', 'wb') as handle:
-    pickle.dump(train_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    train_dict = translator.save_dictionary
+    with open('../data/training.pickle', 'wb') as handle:
+        pickle.dump(train_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    print 'Hi'
