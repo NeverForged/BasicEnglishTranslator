@@ -55,8 +55,7 @@ class BasicEnglishTranslator():
         self.model = model
         # Dictionary
         # check valid dictionary
-        self.class_dictionary = pickle.load(open('../data/basic_english.pickle',
-                                                 "rb"))
+        self.class_dictionary = pickle.load(open('../data/basic_english.pickle',"rb"))
         # Threshold
         self.threshold = threshold
         self.save_dictionary = self.class_dictionary.copy()
