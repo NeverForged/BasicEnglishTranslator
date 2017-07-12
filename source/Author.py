@@ -59,7 +59,7 @@ class Author():
         self.author = author
         a = author.encode('ascii', 'replace')
         a = a.lower().strip().replace(' ','_')
-        self.author_fromatted = a
+        self.author_formatted = a
         self.threshold = threshold
         self.verbose = verbose
         self.book_num  = 0
@@ -259,10 +259,10 @@ class Author():
         txt =  txt.replace('  ', ' ')
         self.basic_list = self.lst_ret
         self.basic_text = txt
-        with open('../authors/' + self.author_fromatted + '_words', 'wb') as handle:
+        with open('../authors/' + self.author_formatted + '_words', 'wb') as handle:
                     pickle.dump(self.words,
-                                handle,
-                                protocol=pickle.HIGHEST_PROTOCOL)
+                                handle, protocol=pickle.HIGHEST_PROTOCOL)
+        print 'Should be - {}'.format(len(self.words))
         return txt
 
     def find_word(self, clean, wrd, prt):
@@ -437,12 +437,12 @@ class Author():
                         except:
                             if self.verbose:
                                 print 'Error: {} -ignored'.format(lst)
-        with open('../authors/' + self.author_fromatted + '_bigrams',
+        with open('../authors/' + self.author_formatted + '_bigrams',
                   'wb') as handle:
                     pickle.dump(self.bigrams, handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
         # save here to avoid having a model and no 'bigrams'
-        model.save('../model/'+self.author_fromatted + '.bin')
+        model.save('../model/'+self.author_formatted + '.bin')
         return model
 
     def tokenize_books(self, fit=False, input=None):
