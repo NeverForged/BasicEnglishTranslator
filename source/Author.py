@@ -25,6 +25,7 @@ from collections import defaultdict
 import random
 from bs4 import BeautifulSoup
 import requests
+import numpy as np
 
 class Author():
     '''
@@ -97,7 +98,8 @@ class Author():
                 print '         ...done.'
             print '   ....creating the dictionary...'
             for word in pos_tag(self.author_model.wv.vocab.keys()):
-                self.words[word[0]] = [word[0], word[0], word[1]]
+                clean = self.clean_word(word[0])
+                self.words[clean] = [clean, clean, word[1]]
             with open('../authors/' + a + '_words', 'wb') as handle:
                     pickle.dump(self.words, handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
@@ -262,7 +264,6 @@ class Author():
         with open('../authors/' + self.author_formatted + '_words', 'wb') as handle:
                     pickle.dump(self.words,
                                 handle, protocol=pickle.HIGHEST_PROTOCOL)
-        print 'Should be - {}'.format(len(self.words))
         return txt
 
     def find_word(self, clean, wrd, prt):
@@ -569,7 +570,7 @@ class Author():
         Moving a lot of functions here for speed
         '''
         check_clean = word.encode('ascii', 'replace')
-        return check_clean.strip(string.punctuation).lower
+        return check_clean.strip(string.punctuation).lower()
 
 if __name__ == '__main__':
     start = time.clock()
@@ -580,39 +581,21 @@ if __name__ == '__main__':
         model = gensim.models.Word2Vec.load(b)
     print "This took only {:.3f}s".format(time.clock()-start)
     try:
-        wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
+        sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
         # articles = pickle.load(open('../data/articles_en.pickle', 'rb'))
     except:
-        wiki = {}
-    keys = wiki.keys()
-    abc = len(keys)
-    keys.sort()
-    keys = keys[::-1]
-    print "Starting loop..."
-    for i, item in enumerate(keys):
-        try:
-            articles = pickle.load(open('../data/articles.pickle', 'rb'))
-        except:
-            articles = {}
-        # check if it's been done before...
-        # this is getting old
-        if item not in articles:
-            start = time.clock()
-            # we'll lose capitalization, but whatever...
-            MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-            translator = BasicEnglishTranslator(model, threshold=3)
-            author = Author('Alexandre Dumas', model, threshold=3)
-            translator.fit(MyText)
-            author.fit(MyText)
-            articles[item] = [translator.basic_text, translator.basic_list,
-                              translator.real_text, translator.real_list]
-            with open('../data/articles.pickle', 'wb') as handle:
-                pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            articles = {}
-            end = time.clock() - start
-            dic = translator.save_dictionary
-            otr = author.words
-            print "{} of {} - {}: {:.2f}s ({} | {})".format(i, abc,
-                                                           item, end,
-                                                           len(dic),
-                                                           len(otr))
+        print 'Error - no sentences'
+    num = int(len(sentences)/15)
+    rnd = random.randint(0,10)
+    lspace = np.linspace(rnd*15, (num-rnd)*15, random.randint(10,25))
+    texts = []
+    for l in lspace:
+        n = int(l)
+        tmp = []
+        for i in xrange(n, n + 15):
+            tmp.append(' '.join(sentences[i]))
+        texts.append(' \n '.join(tmp))
+    for text in texts:
+        dumas = Author('Alexandre Dumas', model=model, threshold=10)
+        dumas.fit(text)
+        print len(dumas.words)
