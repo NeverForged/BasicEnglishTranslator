@@ -592,6 +592,7 @@ if __name__ == '__main__':
         except:
             articles = {}
         # check if it's been done before...
+        # this is getting old
         if item not in articles:
             start = time.clock()
             # we'll lose capitalization, but whatever...
