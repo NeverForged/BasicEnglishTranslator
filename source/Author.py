@@ -596,9 +596,9 @@ if __name__ == '__main__':
             start = time.clock()
             # we'll lose capitalization, but whatever...
             MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-            # translator = BasicEnglishTranslator(model, threshold=3)
+            translator = BasicEnglishTranslator(model, threshold=3)
             author = Author('Alexandre Dumas', model, threshold=3)
-            # translator.fit(MyText)
+            translator.fit(MyText)
             author.fit(MyText)
             articles[item] = [translator.basic_text, translator.basic_list,
                               translator.real_text, translator.real_list]
@@ -606,8 +606,9 @@ if __name__ == '__main__':
                 pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
             articles = {}
             end = time.clock() - start
-            # dic = translator.save_dictionary
+            dic = translator.save_dictionary
             otr = author.words
-            print "{} of {} - {}: {:.2f}s ({})".format(i, abc,
+            print "{} of {} - {}: {:.2f}s ({} | {})".format(i, abc,
                                                            item, end,
+                                                           len(dic),
                                                            len(otr))
