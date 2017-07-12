@@ -5,7 +5,6 @@ import nltk.data
 from nltk import pos_tag, word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
 import cPickle as pickle
-import load_model as lm
 
 def get_basic_english():
     '''
