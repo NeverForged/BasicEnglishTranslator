@@ -141,7 +141,7 @@ class Author():
                 roll = int(self.wordy) # number to check vs wordy
                 last = 'Start' # Placeholder for POS
         except ValueError as e:
-            if verbose:
+            if self.verbose:
                 print str(e)
         # add to sentences for next time we rebuild our model...
         if add_model:
