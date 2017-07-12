@@ -135,10 +135,14 @@ class Author():
         add_adjec = False
         # set up add
         # print wordy, self.wordy
-        if int(wordy) < int(self.wordy):
-            add_adjec = True
-            roll = int(self.wordy) # number to check vs wordy
-            last = 'Start' # Placeholder for POS
+        try:
+            if int(wordy) < int(self.wordy):
+                add_adjec = True
+                roll = int(self.wordy) # number to check vs wordy
+                last = 'Start' # Placeholder for POS
+        except ValueError as e:
+            if verbose:
+                print str(e)
         # add to sentences for next time we rebuild our model...
         if add_model:
             sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
