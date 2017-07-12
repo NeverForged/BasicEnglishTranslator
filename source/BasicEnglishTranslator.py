@@ -12,8 +12,9 @@ import time
 from bs4 import BeautifulSoup
 import requests
 import sys
-from math import sqrt
-
+import random
+import load_model as lm
+from collections import defaultdict
 
 class BasicEnglishTranslator():
     '''
@@ -24,18 +25,15 @@ class BasicEnglishTranslator():
 
     PARAMETERS
     model: A word2vec model to use to search for associated words for new
-           words encountered.  In command-line load, defaults to google-news.
+        words encountered.  In command-line load, defaults to google-news.
     basic_dictionary: an input dictionary specified at instantiation, intent
-                      is a saved dictionary in training.  If none, loads a
-                      dictionary from a pickle file.  If this doesn't exist,
-                      creates one from a csv of Ogden's Vocab and a few
-                      word2vec models in the data directory, if available
-                      Dictionary is of format {'words':['words', 'word']}
-                      Where key is word in document, [0] is word to replace
-                      with, and [1] is where that connection was made in the
-                      first place.
-    threshold: a time, in seconds, that it will spend searching for a new
-               word before giving up.
+        is a saved dictionary in training.  If none, loads a dictionary from a
+        pickle file.  If this doesn't exist, creates one from a csv of Ogden's
+        Vocab and a few word2vec models in the data directory, if available
+        Dictionary is of format {'words':['words', 'word']} Where key is word
+        in document, [0] is word to replace with, and [1] is where that
+        connection was made in the first place.
+    threshold: a number of iterations when looking for a new word
 
     ATTRIBUTES
     real_text: the actual text to translate, entered with fit() method
@@ -43,41 +41,35 @@ class BasicEnglishTranslator():
     real_list: List of real_text with parts of speach
     basic_list: List of basic_text with parts of speach
     class_dictionary: the used dictionary with additional translation steps
-                      included, if any
+        included, if any.
+
+    METHODS
+    fit(input_text): Main function, builds the various lists and texts off
+        of the input_text (string)
     '''
-    def __init__(self, model, basic_dictionary=None, threshold=0.25):
+    def __init__(self, model, basic_dictionary=None,
+                 threshold=1, verbose=False):
         '''
-        Initializer.  Takes the real_text as an input string.
+        Initializer.
         '''
         # model
-        if type(model) == gensim.models.keyedvectors.KeyedVectors:
-            self.model = model
-        else:
-            raise ValueError('The model specified is not a valid model of \
-                              type <gensim.models.keyedvectors.KeyedVectors>')
+        self.model = model
         # Dictionary
         # check valid dictionary
-        if ((type(basic_dictionary) == dict) and
-                (len(basic_dictionary.values()[0]) == 3)):
-            self.class_dictionary = basic_dictionary
-        else:  # load our vetted dictionary...
-            try:
-                self.class_dictionary = self.load_dictionary()
-            except:
-                raise KeyError('No keys since there is no dictionary.')
+        self.class_dictionary = pickle.load(open('../data/basic_english.pickle',
+                                                 "rb"))
         # Threshold
         self.threshold = threshold
         self.save_dictionary = self.class_dictionary.copy()
+        self.verbose = verbose
 
-    def fit(self, input_text):
+    def fit(self, input_text, add_model=False):
         '''
         The actual translation occurs here:
-
         Methodology:
             Takes an input text, turns it to a list w/parts of speach tagging,
             then based on the part of speach, replaces certain words with
             Basic English words from the dictionary.
-
         Input: String
         '''
         self.real_text = input_text
@@ -85,11 +77,19 @@ class BasicEnglishTranslator():
         done = 0
         # timer...
         start = time.clock()
-        input_text = input_text.replace('—', ' - ').replace("’", " ' ")
-        input_text = ''.join([a if ord(a) < 128 else ''
-                              for a in list(input_text)])
+        prt = set(string.printable)
+        input_text = filter(lambda x: x in prt, input_text)
+        # add to sentences for next time we rebuild our model...
+        if add_model:
+            input_sentences = self.book_to_sentences(input_text)
+            sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
+            sentences += input_sentences
+            with open('../data/sentences.pickle', 'wb') as handle:
+                pickle.dump(sentences, handle,
+                            protocol=pickle.HIGHEST_PROTOCOL)
         words = pos_tag(word_tokenize(input_text))  # makes a list of words...
         self.real_list = words
+
         # These simply pass thru the model
         pass_thru = ['CD',  # CD: numeral, cardinal
                      'EX',  # EX: existential there
@@ -140,11 +140,11 @@ class BasicEnglishTranslator():
                        ]
         done == 0
         count_replacements = 0
-        lst_ret = []
-        for word in words:
+        self.lst_ret = []
+        for idx, word in enumerate(words):
             if word[1] in pass_thru:
                 # put it in and move on... it's proper or whatever
-                lst_ret.append(word[0])
+                self.lst_ret.append(word[0])
             else:
                 # We have a word we need to replace...
                 # bath it...
@@ -153,65 +153,98 @@ class BasicEnglishTranslator():
                 # already simple... throw it in and move
                 if clean in self.class_dictionary:
                     temp = self.class_dictionary[clean][0]
-                    lst_ret.append(self.retain_capitalization(temp, word[0]))
-                elif clean != '':  # not alread simply/basic..
-                    try:  # in case it fails...
-                        start_this = time.clock()
-                        lst = list(set(self.model.most_similar(clean)))
-                        done = 0
-                        n = 0
-                        while done == 0:
-                            check = list(lst)[n][0]
-                            n += 1
-                            check_clean = check.strip(string.punctuation)
-                            ccln = check_clean.lower()
-                            b = pos_tag([ccln])[0][1]
-                            if ccln in self.class_dictionary and b == word[1]:
-                                done = 1
-                                # add to dictionary...based on what's there,
-                                # retaining grouping info
-                                ccln = check_clean.lower()
-                                tmp = self.class_dictionary[check_clean][0]
-                                a = pos_tag([tmp])[0][1]
-                                self.class_dictionary[clean] = [tmp, ccln, a]
-                                # add to lst
-                                lst_ret.append(
-                                    self.retain_capitalization(
-                                        self.class_dictionary[clean][0],
-                                        word[0]))
-                                self.save_dictionary[clean] = [tmp, ccln, a]
-                            else:
-                                # add all similar words to that to the lst
-                                if time.clock() - start_this < threshold:
-                                    [lst.append(a) for a in
-                                     self.model.most_similar(check, topn=3)
-                                     if a not in lst]
-                                else:  # timeout!
-                                    done = 1
-                                    cl = clean.lower()
-                                    a = pos_tag([cln])[0][1]
-                                    self.class_dictionary[clean] = [cl, cl, a]
-
-                                    lst_ret.append(
-                                        self.retain_capitalization(
-                                            self.class_dictionary[clean][0],
-                                            word[0]))
-                    except:
-                        a = word[0]
-                        lst_ret.append(self.retain_capitalization(a, a))
-                        temp = word[0].lower()
-                        self.class_dictionary[temp] = [temp, None, word[1]]
+                    self.lst_ret.append(self.retain_capitalization(temp,
+                                                                   word[0]))
+                elif clean != '' and len(clean) > 3:
+                    # not alread simply/basic, and more than 3 letters
+                    # set as if we couldn't find it...
+                    self.lst_ret.append(self.retain_capitalization(clean,
+                                                                   word[0]))
+                    # start a thread to look for it...
+                    # argu = (clean, idx, word[0], word[1])
+                    # t = threading.Thread(target=self.find_word, args=argu)
+                    # t.daemon = True
+                    # t.start()
+                    abc = self.find_word(clean, word[0], word[1])
         end = time.clock()
-        print 'Time: {:.2f}s'.format(end-start)
-        txt = self.replace_punctuation(' '.join(lst_ret))
+        if self.verbose:
+            print 'Time: {:.4f}s'.format(end-start)
+        txt = self.replace_punctuation(' '.join(self.lst_ret))
         txt = txt.encode('utf-8')
         txt = re.sub("\xe2\x80\x93", "-", txt)
-        self.basic_list = lst_ret
+        self.basic_list = self.lst_ret
         self.basic_text = txt
+        with open('../data/basic_english.pickle', 'wb') as handle:
+                    pickle.dump(self.save_dictionary,
+                                handle,
+                                protocol=pickle.HIGHEST_PROTOCOL)
 
-    def load_dictionary(self):
-        '''Loads the dictionary...'''
-        return pickle.load(open('../data/basic_english.pickle', "rb"))
+    def find_word(self, clean, wrd, prt):
+        '''
+        If a word is not in the dictionary, this looks for the word given the
+        most simmilar word(s) in the model loaded, determines if the simmilar
+        word has been mapped already, and inserts it into the model.
+        Looks for most similar word to that word in the model, then makes a
+        length-threshold list of words most similar to the word before.
+        Checks if these words were mapped, POS dependent.  if so, makes the
+        same mapping.
+        '''
+        lst_ret = [clean]
+        # try: # in case it fails...
+        lst = []
+        try:
+            lst = [a[0] for a in self.model.most_similar(wrd)]
+        except KeyError as e:
+            if self.verbose:
+                print str(e)
+        if len(lst) >= 1:
+            for i in xrange(self.threshold):
+                c = self.model.most_similar(lst[i], topn=self.threshold)
+                for d in c:
+                    lst.append(d[0])
+        lst = list(set(lst))
+        # collect only those words in the dictionary...
+        #    ...and order by simalarity
+        lst = [(self.clean_word(a), self.model.similarity(wrd, a)) for a in lst
+               if self.clean_word(a) in self.save_dictionary]
+        lst = sorted(lst, key=lambda x: -x[1])
+        # lst in order
+        # also, everything was mapping to 'i' for some reason...
+        lst = [a[0] for a in lst if len(a[0]) > 1]
+        n = 0
+        done = 0
+        # since we ordered by similarity, best go first
+        for item in lst:
+            # must match w/part of speach...
+            if done == 0:
+                b = pos_tag([item])[0][1]
+                lst_ret.append(item)
+                if b == prt:
+                    # add to dictionary...based on what's there,
+                    # retaining grouping info
+                    done = 1
+                    tmp = self.class_dictionary[item][0]
+                    self.class_dictionary[clean] = [tmp, item, prt]
+                    # add to lst...at the idx that cllaed it
+                    idx = len(self.lst_ret) - 1
+                    self.lst_ret[idx] = self.retain_capitalization(
+                        self.class_dictionary[item][0], wrd)
+                    if len(tmp) > 1 and len(item) > 1:
+                        self.save_dictionary[clean] = [tmp, item, prt]
+                    lst_ret.append('*added: {}, {}*'.format(tmp, item))
+            if done == 0:
+                cln = clean.lower()
+                a = pos_tag([cln])[0][1]
+                self.class_dictionary[clean] = [cln, cln, a]
+                lst_ret.append(
+                    self.retain_capitalization(
+                        self.class_dictionary[clean][0], wrd))
+        # except:
+        #     lst_ret.append('ERRORED OUT')
+        #     self.class_dictionary[clean] = [clean, None, prt]
+        if self.verbose:
+            print lst_ret
+        return lst_ret
 
     def retain_capitalization(self, new_word, original_word):
         '''
@@ -243,132 +276,89 @@ class BasicEnglishTranslator():
         return text
 
 
-# external to class for the sake of saving model stuff
-# Define a function to split a book into parsed sentences
-def book_to_sentences(input_text, tokenizer, remove_stopwords=False):
-    # Function to split a review into parsed sentences. Returns a
-    # list of sentences, where each sentence is a list of words
-    #
-    # 1. Use the NLTK tokenizer to split the paragraph into sentences
-    raw_sentences = tokenizer.tokenize(
-                    input_text.encode("ascii", "replace").strip())
-    #
-    # 2. Loop over each sentence
-    sentences = []
-    for raw_sentence in raw_sentences:
-        # If a sentence is empty, skip it
-        if len(raw_sentence) > 0:
-            # Otherwise, call review_to_wordlist to get a list of words
-            sentences.append(book_to_wordlist(raw_sentence, remove_stopwords))
-    #
-    # Return the list of sentences (each sentence is a list of words,
-    # so this returns a list of lists
-    return sentences
+    def clean_word(self, word):
+        '''
+        Moving a lot of functions here for speed
+        '''
+        check_clean = word.encode('ascii', 'replace')
+        return check_clean.strip(string.punctuation).lower()
 
 
-def book_to_wordlist(book_text, remove_stopwords=False):
-    # Function to convert a document to a sequence of words,
-    # optionally removing stop words.  Returns a list of words.
-    # 3. Convert words to lower case and split themstring.decode('utf-8')
-    words = book_text.lower().split()
-    #
-    # 4. Optionally remove stop words (false by default)
-    if remove_stopwords:
-        stops = set(stopwords.words("english"))
-        words = [w for w in words if w not in stops]
-    #
-    # 5. Return a list of words
-    return words
+        # Define a function to split a book into parsed sentences
+    def book_to_sentences(self, input_text, remove_stopwords=False):
+        # Function to split a review into parsed sentences. Returns a
+        # list of sentences, where each sentence is a list of words
+        #
+        # 1. Use the NLTK tokenizer to split the paragraph into sentences
+        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+        raw_sentences = tokenizer.tokenize(
+                        input_text.encode("ascii", "replace").strip())
+        #
+        # 2. Loop over each sentence
+        sentences = []
+        for raw_sentence in raw_sentences:
+            # If a sentence is empty, skip it
+            if len(raw_sentence) > 0:
+                # Otherwise, call review_to_wordlist to get a list of words
+                sentences.append(self.book_to_wordlist(raw_sentence,
+                                                       remove_stopwords))
+        # Return the list of sentences (each sentence is a list of words,
+        # so this returns a list of lists
+        return sentences
+
+
+    def book_to_wordlist(self, book_text, remove_stopwords=False):
+        # Function to convert a document to a sequence of words,
+        # optionally removing stop words.  Returns a list of words.
+        # 3. Convert words to lower case and split themstring.decode('utf-8')
+        words = book_text.lower().split()
+        #
+        # 4. Optionally remove stop words (false by default)
+        if remove_stopwords:
+            stops = set(stopwords.words("english"))
+            words = [w for w in words if w not in stops]
+        #
+        # 5. Return a list of words
+        return words
 
 
 if __name__ == '__main__':
-    start =  time.clock()
-    articles = {}
-    lst = [u'/wiki/Vocabulary', u'/wiki/Democracy', u'/wiki/Execution',
-           u'/wiki/Architecture', u'/wiki/Communication', u'/wiki/Electronics',
-           u'/wiki/Engineering', u'/wiki/Farming', u'/wiki/Health',
-           u'/wiki/Industry', u'/wiki/Medicine', u'/wiki/Transport',
-           u'/wiki/Weather', u'/wiki/Anthropology', u'/wiki/Archaeology',
-           u'/wiki/Geography', u'/wiki/Education', u'/wiki/History',
-           u'/wiki/Language', u'/wiki/Philosophy', u'/wiki/Psychology',
-           u'/wiki/Sociology', u'/wiki/Teaching',  u'/wiki/Animation',
-           u'/wiki/Art', u'/wiki/Book', u'/wiki/Cooking',
-           u'/wiki/Custom', u'/wiki/Culture', u'/wiki/Dance',
-           u'/wiki/Family', u'/wiki/Game',  u'/wiki/Gardening',
-           u'/wiki/Leisure', u'/wiki/Movie', u'/wiki/Music',
-           u'/wiki/Radio',  u'/wiki/Sport', u'/wiki/Theatre',
-           u'/wiki/Travel', u'/wiki/Television', u'/wiki/Algebra',
-           u'/wiki/Astronomy', u'/wiki/Biology', u'/wiki/Chemistry',
-           u'/wiki/Ecology', u'/wiki/Geometry', u'/wiki/Mathematics',
-           u'/wiki/Physics', u'/wiki/Statistics', u'/wiki/Zoology',
-           u'/wiki/Copyright', u'/wiki/Economics', u'/wiki/Government',
-           u'/wiki/Law', u'/wiki/Military', u'/wiki/Politics',
-           u'/wiki/Trade', u'/wiki/Atheism', u'/wiki/Buddhism',
-           u'/wiki/Christianity', u'/wiki/Esotericism', u'/wiki/Hinduism',
-           u'/wiki/Islam', u'/wiki/Jainism', u'/wiki/Judaism',
-           u'/wiki/Mythology', u'/wiki/Paganism', u'/wiki/Sect',
-           u'/wiki/Sikhism', u'/wiki/Taoism', u'/wiki/Theology',
-           u'/wiki/Horse', u'/wiki/France', u'/wiki/French_Revolution',
-           u'/wiki/Sword', u'/wiki/Gun', u'/wiki/War']
-    model = gensim.models.KeyedVectors.load_word2vec_format(
-            '../model/GoogleNews-vectors-negative300.bin', binary=True)
+    start = time.clock()
+    b = '../model/300features_5min_word_count_10context.npy'
     try:
-        save_dic = pickle.load(open('../data/training.pickle', 'rb'))
+        model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
-        save_dic = None
-    sentences = []
-    print 'this took {}s'.format(time.clock()-start)
-    for i, item in enumerate(lst):
-        start = time.clock()
-        translator = BasicEnglishTranslator(model, basic_dictionary=save_dic)
-        r = requests.get('https://simple.wikipedia.org'+item)
-        soup = BeautifulSoup(r.content, 'html.parser')
-        tags = soup.find_all('p')
-        MyText = '\n'.join([tag.get_text() for tag in tags])
-
-        # Initialize the "CountVectorizer" object, which is scikit-learn's
-        # bag of words tool.
-        vectorizer = CountVectorizer(analyzer="word",
-                                     tokenizer=None,
-                                     preprocessor=None,
-                                     stop_words=None,
-                                     max_features=5000)
-        # fit_transform() does two functions: First, it fits the model
-        # and learns the vocabulary; second, it transforms our training data
-        # into feature vectors. The input to fit_transform should be a list of
-        # strings.
-        features = vectorizer.fit_transform([MyText])
-        # Numpy arrays are easy to work with, so convert the result to an
-        # array
-        features = features.toarray()
-        vocab = vectorizer.get_feature_names()
-        # Load the punkt tokenizer
-        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-        # Load in sentences
-        MyText = MyText.encode('ascii', 'replace')
+        model = gensim.models.Word2Vec.load(b)
+    print "This took only {:.3f}s".format(time.clock()-start)
+    try:
+        wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
+        # articles = pickle.load(open('../data/articles_en.pickle', 'rb'))
+    except:
+        wiki = {}
+    keys = wiki.keys()
+    abc = len(keys)
+    keys.sort()
+    keys = keys[::-1]
+    for i, item in enumerate(keys):
         try:
-            sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
+            articles = pickle.load(open('../data/articles.pickle', 'rb'))
         except:
-            print 'No sentences saved.'
-        sentences += book_to_sentences(MyText, tokenizer)
-        with open('../data/sentences.pickle', 'wb') as handle:
-            pickle.dump(sentences, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        sentences = []
-        translator.fit(MyText)
-        try:
-            aticles = pickle.load(open('../data/sentences.pickle', 'rb'))
-        except:
-            print 'eh'
-        articles[item.replace('/wiki/', '')] = [translator.basic_text,
-                                                translator.basic_list,
-                                                translator.real_text,
-                                                translator.real_list]
-
-        with open('../data/articles.pickle', 'wb') as handle:
-            pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        articles = {}
-        save_dic = translator.save_dictionary
-        with open('../data/training.pickle', 'wb') as handle:
-            pickle.dump(save_dic, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        end = time.clock()-start
-        print "{} of {}: {}s".format(i, len(lst), end)
+            articles = {}
+        # check if it's been done before...
+        if item not in articles:
+            start = time.clock()
+            # we'll lose capitalization, but whatever...
+            MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
+            translator = BasicEnglishTranslator(model,
+                                                basic_dictionary=None,
+                                                threshold=10)
+            translator.fit(MyText)
+            articles[item] = [translator.basic_text, translator.basic_list,
+                              translator.real_text, translator.real_list]
+            with open('../data/articles.pickle', 'wb') as handle:
+                pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            articles = {}
+            end = time.clock() - start
+            dic = translator.save_dictionary
+            print "{} of {} - {}: {:.2f}s ({})".format(i, abc,
+                                                       item, end, len(dic))
