@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 import requests
 import sys
 import random
-import load_model as lm
 from collections import defaultdict
 
 class BasicEnglishTranslator():
