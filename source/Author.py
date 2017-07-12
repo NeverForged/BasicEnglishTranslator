@@ -18,7 +18,6 @@ from gensim.models import Word2Vec
 import gensim as gensim
 import cPickle as pickle
 from BasicEnglishTranslator import BasicEnglishTranslator
-import load_model as lm
 from nltk import pos_tag, word_tokenize
 import time
 from gensim.models.phrases import Phrases, Phraser
