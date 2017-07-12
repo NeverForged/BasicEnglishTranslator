@@ -35,7 +35,7 @@ def main(num_features=300,
 
     # If you don't plan to train the model any further, calling
     # init_sims will make the model much more memory-efficient.
-    # model.init_sims(replace=True)
+    model.init_sims(replace=True)
     # since I will remake rather than retrain...
 
     # It can be helpful to create a meaningful model name and
