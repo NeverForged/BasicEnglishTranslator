@@ -596,7 +596,6 @@ if __name__ == '__main__':
             start = time.clock()
             # we'll lose capitalization, but whatever...
             MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-            # for some reason though there was a git thing here
             # translator = BasicEnglishTranslator(model, threshold=3)
             author = Author('Alexandre Dumas', model, threshold=3)
             # translator.fit(MyText)
