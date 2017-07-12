@@ -255,7 +255,7 @@ class Author():
         txt =  txt.replace('  ', ' ')
         self.basic_list = self.lst_ret
         self.basic_text = txt
-        with open('../athors/' + self.author_fromatted + '_words', 'wb') as handle:
+        with open('../authors/' + self.author_fromatted + '_words', 'wb') as handle:
                     pickle.dump(self.words,
                                 handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
