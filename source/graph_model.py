@@ -7,8 +7,6 @@ from collections import defaultdict
 import cPickle as pickle
 import networkx as nx
 import nxpd as nxpd
-import matplotlib.pyplot as plt
-import matplotlib.font_manager
 
 def find_sims(model):
     '''
