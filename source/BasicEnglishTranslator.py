@@ -322,7 +322,8 @@ class BasicEnglishTranslator():
 
 if __name__ == '__main__':
     start = time.clock()
-    b = '../model/300features_5min_word_count_10context.npy'
+    # b = '../model/300features_5min_word_count_10context.npy'
+    b = '../model/GoogleNews-vectors-negative300.bin'
     try:
         model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
