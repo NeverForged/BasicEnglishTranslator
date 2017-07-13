@@ -575,6 +575,7 @@ class Author():
 if __name__ == '__main__':
     start = time.clock()
     b = '../model/300features_5min_word_count_10context.npy'
+    # b = '../model/GoogleNews-vectors-negative300.bin'
     try:
         model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
@@ -596,6 +597,6 @@ if __name__ == '__main__':
             tmp.append(' '.join(sentences[i]))
         texts.append(' \n '.join(tmp))
     for text in texts:
-        dumas = Author('Alexandre Dumas', model=model, threshold=10)
+        dumas = Author('Alexandre Dumas', model=model, threshold=1)
         dumas.fit(text)
         print len(dumas.words)

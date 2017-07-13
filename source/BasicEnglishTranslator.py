@@ -322,8 +322,8 @@ class BasicEnglishTranslator():
 
 if __name__ == '__main__':
     start = time.clock()
-    # b = '../model/300features_5min_word_count_10context.npy'
-    b = '../model/GoogleNews-vectors-negative300.bin'
+    b = '../model/300features_5min_word_count_10context.npy'
+    # b = '../model/GoogleNews-vectors-negative300.bin'
     try:
         model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
@@ -350,7 +350,7 @@ if __name__ == '__main__':
             MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
             translator = BasicEnglishTranslator(model,
                                                 basic_dictionary=None,
-                                                threshold=10)
+                                                threshold=1)
             translator.fit(MyText)
             articles[item] = [translator.basic_text, translator.basic_list,
                               translator.real_text, translator.real_list]
