@@ -338,8 +338,8 @@ if __name__ == '__main__':
     abc = len(keys)
     keys.sort()
     keys = keys[::-1]
+    del wiki
     for i, item in enumerate(keys):
-        wiki = {}
         try:
             articles = pickle.load(open('../data/articles.pickle', 'rb'))
         except:
@@ -350,8 +350,8 @@ if __name__ == '__main__':
             # we'll lose capitalization, but whatever...
             wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
             MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-            wiki = {}
-            articles = {}
+            del wiki
+            del articles
             translator = BasicEnglishTranslator(model, threshold=1)
             translator.fit(MyText)
             try:
