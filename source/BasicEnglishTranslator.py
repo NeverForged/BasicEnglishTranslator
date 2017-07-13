@@ -14,6 +14,7 @@ import requests
 import sys
 import random
 from collections import defaultdict
+from memory_profiler import profile
 
 class BasicEnglishTranslator():
     '''
@@ -191,13 +192,13 @@ class BasicEnglishTranslator():
         # try: # in case it fails...
         lst = []
         try:
-            lst = [a[0] for a in self.model.most_similar(wrd)]
+            lst = [a[0] for a in self.model.wv.most_similar(wrd)]
         except KeyError as e:
             if self.verbose:
                 print str(e)
         if len(lst) >= 1:
             for i in xrange(self.threshold):
-                c = self.model.most_similar(lst[i], topn=self.threshold)
+                c = self.model.wv.most_similar(lst[i], topn=self.threshold)
                 for d in c:
                     lst.append(d[0])
         lst = list(set(lst))
