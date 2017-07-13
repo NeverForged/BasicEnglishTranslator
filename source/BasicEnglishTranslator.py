@@ -14,7 +14,6 @@ import requests
 import sys
 import random
 from collections import defaultdict
-from memory_profiler import profile
 
 class BasicEnglishTranslator():
     '''
