@@ -328,6 +328,7 @@ if __name__ == '__main__':
         model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
         model = gensim.models.Word2Vec.load(b)
+    model.init_sims(replace=True)
     print "This took only {:.3f}s".format(time.clock()-start)
     try:
         wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
