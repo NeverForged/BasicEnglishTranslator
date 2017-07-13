@@ -334,11 +334,11 @@ if __name__ == '__main__':
         # articles = pickle.load(open('../data/articles_en.pickle', 'rb'))
     except:
         wiki = {}
-    keys = wiki.keys()
-    abc = len(keys)
-    keys.sort()
-    keys = keys[::-1]
-    for i, item in enumerate(keys):
+    # keys = wiki.keys()
+    # abc = len(keys)
+    # keys.sort()
+    # keys = keys[::-1]
+    for i, item in enumerate(wiki.keys):
         try:
             articles = pickle.load(open('../data/articles.pickle', 'rb'))
         except:
@@ -348,10 +348,13 @@ if __name__ == '__main__':
             start = time.clock()
             # we'll lose capitalization, but whatever...
             MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-            translator = BasicEnglishTranslator(model,
-                                                basic_dictionary=None,
-                                                threshold=1)
+            articles = {}
+            translator = BasicEnglishTranslator(model, threshold=1)
             translator.fit(MyText)
+            try:
+                articles = pickle.load(open('../data/articles.pickle', 'rb'))
+            except:
+                articles = {}
             articles[item] = [translator.basic_text, translator.basic_list,
                               translator.real_text, translator.real_list]
             with open('../data/articles.pickle', 'wb') as handle:
