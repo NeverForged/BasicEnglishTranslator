@@ -1,4 +1,5 @@
 import make_dictionary as md
+import gensim
 import build_model as mm
 from BasicEnglishTranslator import BasicEnglishTranslator
 import cPickle as pickle
