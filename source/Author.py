@@ -573,13 +573,15 @@ class Author():
         return check_clean.strip(string.punctuation).lower()
 
 if __name__ == '__main__':
+
     start = time.clock()
-    b = '../model/300features_5min_word_count_10context.npy'
-    # b = '../model/GoogleNews-vectors-negative300.bin'
+    # b = '../model/300features_5min_word_count_10context.npy'
+    b = '../model/GoogleNews-vectors-negative300.bin'
     try:
         model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
         model = gensim.models.Word2Vec.load(b)
+    model.init_sims(replace=True)
     print "This took only {:.3f}s".format(time.clock()-start)
     try:
         sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
@@ -599,4 +601,10 @@ if __name__ == '__main__':
     for text in texts:
         dumas = Author('Alexandre Dumas', model=model, threshold=1)
         dumas.fit(text)
-        print len(dumas.words)
+        austin = Author('Jane Austin', model=model, threshold=1)
+        austin.fit(text)
+        trans = BasicEnglishTranslator(model, threshold=1)
+        trans.fit(text)
+        print '{} | {} | {}'.format(len(trans.save_dictionary),
+                                    len(dumas.words),
+                                    len(austin.words)
