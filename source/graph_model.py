@@ -181,7 +181,7 @@ def make_dictionary(G, input_d):
 
 
 if __name__ == '__main__':
-    model = get_sentence_model()
+    model = get_google()
     d = get_sims('test', model)
     G, d = make_graph_model(d)
     print d.keys()
