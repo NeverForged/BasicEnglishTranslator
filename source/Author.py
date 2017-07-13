@@ -590,7 +590,11 @@ if __name__ == '__main__':
         print 'Error - no sentences'
     num = int(len(sentences)/15)
     rnd = random.randint(0,10)
-    lspace = np.linspace(rnd*15, (num-rnd)*15, 200)
+    try:
+        num_runs = int(sys.argv[1])
+    else:
+        num_runs = 500
+    lspace = np.linspace(rnd*15, (num-rnd)*15, num_runs)
     texts = []
     for l in lspace:
         n = int(l)
