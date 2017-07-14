@@ -79,8 +79,14 @@ def find_sims(model):
                     ret[word] = nlst
         if i % 100 == 0:
             per = 100.0 * i/keys_length
-            print 'Get Connections {:.2f}%  \r'.format(per),
-
+            if i % 200 == 0:
+                print 'Get Connections {:.2f}% \  \r'.format(per),
+            elif i % 150 == 0:
+                print 'Get Connections {:.2f}% /  \r'.format(per),
+            elif i % 100 == 0:
+                print 'Get Connections {:.2f}% -  \r'.format(per),
+            else:
+                print 'Get Connections {:.2f}% |  \r'.format(per),
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
 
@@ -166,7 +172,6 @@ def make_dictionary(G, input_d):
             length_n = len(temp[key])
             if length == 0 or length < length_n:
                 paths[key] = temp[key]
-                print key, paths[key]
         if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
             print '    Pathfinder: {:.0f}% \r'.format(per),
@@ -187,10 +192,9 @@ def make_dictionary(G, input_d):
         else:
             # self as word...?
             input_d[key] = [list(paths[key])[0], list(paths[key])[0], pos]
-            print input_d[key]
         if i % 25  == 0:
             per = 100.0*i/float(len(paths))
-            print '    Dictionary: {:.3f}% \r'.format(per),
+            print '    Dictionary: {:.0f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
     with open('../data/temp_dict.pickle', 'wb') as handle:
             pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -203,11 +207,15 @@ if __name__ == '__main__':
     else:
         model = get_sentence_model()
     d = get_sims('test', model)
+    print d['writ']
+    print d['spoon']
     # d = {'word':['words', 'wordy', 'worded'], 'thing':['word', 'wizzy', 'wick', 'foo'], 'foo':['bar']}
     G, d = make_graph_model(d)
     # print G.nodes()
     newd = pickle.load(open('../data/basic_english - Copy small.pickle',
                            'rb'))
+    print newd['writ']
+    print newd['spoon']
     del model
     # newd = {'foo':['foo', 'foo', 'NN'], 'word':['word', 'word', 'NN']}
     thed = make_dictionary(G, newd)
