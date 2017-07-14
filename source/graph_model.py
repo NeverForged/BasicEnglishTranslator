@@ -197,8 +197,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == 'google':
             model = get_google()
-    else
-        model = get_sentences_model()
+    else:
+        model = get_sentence_model()
     d = get_sims('test', model)
     # d = {'word':['words', 'wordy', 'worded'], 'thing':['word', 'wizzy', 'wick', 'foo'], 'foo':['bar']}
     G, d = make_graph_model(d)
