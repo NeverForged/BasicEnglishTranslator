@@ -56,37 +56,31 @@ def find_sims(model):
             if pos in make_simple:
                 # it's the sort of thing we'd replace...
                 try:
-                    lst = [a[0].lower() for a in model.most_similar(word.lower())
-                           if a[0].lower() == a[0]]
+                    lst = [(a[0], 1.0 - a[1]) for a in
+                            model.most_similar(word.lower())
+                            if a[0].lower() == a[0]]
                 except:
                     # word wasn't in the vocab after manipulation, skip it
                     lst = []
                 if len(lst) > 0:
-                    lst = [a for a in lst if not any(x in ylst for x in a)]
+                    lst = [a for a in lst if not any(x in ylst for x in a[0])]
                     nlst = []
                     for a in lst:
-                        if pos_tag([a])[0][1] == pos:
+                        if pos_tag([a[0]])[0][1] == pos:
                             nlst.append(a)
                     # avoid at least one opposite...
                     check = len(nlst)
-                    while check > 2: # but only if there are options
-                        rem = model.doesnt_match(nlst + [word])
-                        if rem == word:
-                            check = 0
-                        else:
-                            nlst.pop(nlst.index(rem))
-                            check = len(nlst)
                     ret[word] = nlst
-        if i % 100 == 0:
+        if i % 50 == 0:
             per = 100.0 * i/keys_length
             if i % 200 == 0:
                 print 'Get Connections {:.2f}% \  \r'.format(per),
             elif i % 150 == 0:
-                print 'Get Connections {:.2f}% /  \r'.format(per),
-            elif i % 100 == 0:
-                print 'Get Connections {:.2f}% -  \r'.format(per),
-            else:
                 print 'Get Connections {:.2f}% |  \r'.format(per),
+            elif i % 100 == 0:
+                print 'Get Connections {:.2f}% /  \r'.format(per),
+            else:
+                print 'Get Connections {:.2f}% -  \r'.format(per),
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
 
@@ -142,10 +136,10 @@ def make_graph_model(d):
     # now, to make lines for nx... edgelist
     start = time.clock()
     lines = []
+    G=nx.Graph()
     for key in d.keys():
         for item in d[key]:
-            lines.append('{} {}'.format(key, item))
-    G = nx.parse_edgelist(lines)
+            G.add_edge(item[0], key, weight=item[1])
     print 'G took {:.2f}s'.format(time.clock() - start)
     return G, d
 
@@ -164,7 +158,7 @@ def make_dictionary(G, input_d):
     # make a dictionary...
     for i, word in enumerate(vocab):
         try:
-            temp = nx.shortest_path(G, target=word)
+            temp = nx.shortest_path(G, target=word, weight='weight')
         except:
             temp = {word:word}
         for key in temp.keys():
