@@ -51,7 +51,8 @@ def find_sims(model):
             # only use the ones I want to replace
             # title case to factor out names, though it kills words like Kill
             pos = pos_tag([word.title()])[0][1]
-            if pos in make_simple:
+            pos1 = pos_tag([word])[0][1]
+            if pos in make_simple or pos1 in make_simple:
                 # it's the sort of thing we'd replace...
                 try:
                     lst = [a[0].lower() for a in model.most_similar(word.lower())
