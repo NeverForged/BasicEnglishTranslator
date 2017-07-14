@@ -60,22 +60,23 @@ def find_sims(model):
                 except:
                     # word wasn't in the vocab after manipulation, skip it
                     lst = []
-                lst = [a for a in lst if not any(x in ylst for x in a)]
-                nlst = []
-                for a in lst:
-                    if pos_tag([a])[0][1] == pos:
-                        nlst.append(a)
-                if len(nlst) > 2:
-                    for i in xrange(int(len(nlst)/2)):
-                        rem = model.doesnt_match(nlst + [word])
-                        if rem == word:
-                            pass
-                        else:
-                            nlst.pop(nlst.index(rem))
-                ret[word] = nlst
-            if i % 10 == 0:
-                per = 100.0 * i/float(len(model.vocab.keys()))
-                print 'Get Connections {:.1f}%  \r'.format(per),
+                if len(lst) > 0:
+                    lst = [a for a in lst if not any(x in ylst for x in a)]
+                    nlst = []
+                    for a in lst:
+                        if pos_tag([a])[0][1] == pos:
+                            nlst.append(a)
+                    if len(nlst) > 2:
+                        for i in xrange(int(len(nlst)/2)):
+                            rem = model.doesnt_match(nlst + [word])
+                            if rem == word:
+                                pass
+                            else:
+                                nlst.pop(nlst.index(rem))
+                    ret[word] = nlst
+        if i % 100 == 0:
+            per = 100.0 * i/float(len(model.vocab.keys()))
+            print 'Get Connections {:.3f}%  \r'.format(per),
 
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
@@ -165,9 +166,9 @@ def make_dictionary(G, input_d):
                     path = nx.shortest_path(G, point, word)
                     if len(paths[point]) < len(path):
                         paths[point] = path
-        if i % 50 == 0:
+        if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
-            print '    Pathfinder: {:.0f}% \r'.format(per),
+            print '    Pathfinder: {:.1f}% \r'.format(per),
     print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
 
     # now set our dictionary
@@ -177,9 +178,9 @@ def make_dictionary(G, input_d):
         # i still don't trust the pos tagging
         if pos == pos_tag([paths[key][0]]):
             input_d[key] = [paths[key][-1], paths[key][1], pos]
-        if i % 50 == 0:
+        if i % 25  == 0:
             per = 100.0*i/float(len(paths))
-            print '    Dictionary: {:.0f}% \r'.format(per),
+            print '    Dictionary: {:.1f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
     with open('../data/temp_dict.pickle', 'wb') as handle:
             pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -190,7 +191,6 @@ if __name__ == '__main__':
     model = get_google()
     d = get_sims('test', model)
     G, d = make_graph_model(d)
-    print d.keys()
     newd = pickle.load(open('../data/basic_english - Copy small.pickle',
                            'rb'))
     make_dictionary(G, newd)
