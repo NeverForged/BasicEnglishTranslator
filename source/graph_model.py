@@ -76,7 +76,7 @@ def find_sims(model):
                             nlst.pop(nlst.index(rem))
                     ret[word] = nlst
             if i % 100 == 0:
-                per = 100.0 * i/keys_legnth
+                per = 100.0 * i/keys_length
                 print 'Get Connections {:.2f}%  \r'.format(per),
 
     end = time.clock()
