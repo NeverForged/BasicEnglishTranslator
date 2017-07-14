@@ -45,12 +45,12 @@ def find_sims(model):
     start = time.clock()
     ret = defaultdict(list)
     ylst = list('?!12345678"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c')
+    keys_length = float(len(model.vocab.keys()))
     for i, word in enumerate(model.vocab.keys()):
         if any(x in ylst for x in word):
             # weird one with punctuation, or a phrase
             pass
         else:
-            keys_length = float(len(model.vocab.keys()))
             # only use the ones I want to replace
             pos = pos_tag([word])[0][1]
             if pos in make_simple:
