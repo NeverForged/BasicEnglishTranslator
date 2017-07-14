@@ -168,7 +168,7 @@ def make_dictionary(G, input_d):
                         paths[point] = path
         if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
-            print '    Pathfinder: {:.1f}% \r'.format(per),
+            print '    Pathfinder: {:.3f}% \r'.format(per),
     print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
 
     # now set our dictionary
@@ -180,7 +180,7 @@ def make_dictionary(G, input_d):
             input_d[key] = [paths[key][-1], paths[key][1], pos]
         if i % 25  == 0:
             per = 100.0*i/float(len(paths))
-            print '    Dictionary: {:.1f}% \r'.format(per),
+            print '    Dictionary: {:.3f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
     with open('../data/temp_dict.pickle', 'wb') as handle:
             pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -193,4 +193,5 @@ if __name__ == '__main__':
     G, d = make_graph_model(d)
     newd = pickle.load(open('../data/basic_english - Copy small.pickle',
                            'rb'))
+    del model
     make_dictionary(G, newd)
