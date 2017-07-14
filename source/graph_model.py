@@ -75,9 +75,9 @@ def find_sims(model):
                         else:
                             nlst.pop(nlst.index(rem))
                     ret[word] = nlst
-            if i % 100 == 0:
-                per = 100.0 * i/keys_length
-                print 'Get Connections {:.2f}%  \r'.format(per),
+        if i % 100 == 0:
+            per = 100.0 * i/keys_length
+            print 'Get Connections {:.2f}%  \r'.format(per),
 
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
