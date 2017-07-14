@@ -196,7 +196,7 @@ def make_dictionary(G, input_d):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1].lower() == 'google':
-        model = get_google()
+            model = get_google()
     else
         model = get_sentences_model()
     d = get_sims('test', model)
