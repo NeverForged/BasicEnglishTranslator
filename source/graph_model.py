@@ -49,11 +49,16 @@ def find_sims(model):
             pass
         else:
             # only use the ones I want to replace
+            # title case to factor out names, though it kills words like Kill
             pos = pos_tag([word.title()])[0][1]
             if pos in make_simple:
-                lst = []
-                lst = [a[0].lower() for a in model.most_similar(word.lower())
-                       if a[0].lower() == a[0]]
+                # it's the sort of thing we'd replace...
+                try:
+                    lst = [a[0].lower() for a in model.most_similar(word.lower())
+                           if a[0].lower() == a[0]]
+                except:
+                    # word wasn't in the vocab after manipulation, skip it
+                    lst = []
                 lst = [a for a in lst if not any(x in ylst for x in a)]
                 nlst = []
                 for a in lst:
