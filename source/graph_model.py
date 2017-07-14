@@ -68,12 +68,14 @@ def find_sims(model):
                         if pos_tag([a])[0][1] == pos:
                             nlst.append(a)
                     # avoid at least one opposite...
-                    if len(nlst) > 2: # but only if there are options
+                    check = len(nlst)
+                    while check > 2: # but only if there are options
                         rem = model.doesnt_match(nlst + [word])
                         if rem == word:
-                            pass
+                            check = 0
                         else:
                             nlst.pop(nlst.index(rem))
+                            check = len(nlst)
                     ret[word] = nlst
         if i % 100 == 0:
             per = 100.0 * i/keys_length
@@ -164,6 +166,7 @@ def make_dictionary(G, input_d):
             length_n = len(temp[key])
             if length == 0 or length < length_n:
                 paths[key] = temp[key]
+                print key, paths[key]
         if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
             print '    Pathfinder: {:.0f}% \r'.format(per),
