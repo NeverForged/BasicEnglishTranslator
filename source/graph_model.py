@@ -52,13 +52,13 @@ def find_sims(model):
             pass
         else:
             # only use the ones I want to replace
-            pos = pos_tag([word])[0][1]
+            pos = pos_tag([word.lower()])[0][1]
             if pos in make_simple:
                 # it's the sort of thing we'd replace...
                 try:
-                    lst = [(a[0], 1.0 - a[1]) for a in
-                            model.most_similar(word.lower())
-                            if a[0].lower() == a[0]]
+                    lst = [(a[0], 1 - a[1]**2) for a in
+                           model.most_similar(word.lower())
+                           if a[0].lower() == a[0]]
                 except:
                     # word wasn't in the vocab after manipulation, skip it
                     lst = []
@@ -66,11 +66,18 @@ def find_sims(model):
                     lst = [a for a in lst if not any(x in ylst for x in a[0])]
                     nlst = []
                     for a in lst:
-                        if pos_tag([a[0]])[0][1] == pos:
+                        if pos_tag([a[0].lower()])[0][1] == pos:
                             nlst.append(a)
                     # avoid at least one opposite...
-                    check = len(nlst)
-                    ret[word] = nlst
+                        if len(nlst) > 2:
+                            wlst = [a[0] for a in nlst]
+                            # check which don't match with the original word
+                            rem = model.doesnt_match(wlst + [word])
+                            if rem == word:
+                                pass
+                            else:
+                                nlst.pop(wlst.index(rem))
+                    ret[word] = nlst + [(word, 0.0)]
         if i % 50 == 0:
             per = 100.0 * i/keys_length
             if i % 200 == 0:
@@ -157,15 +164,17 @@ def make_dictionary(G, input_d):
     paths = defaultdict(list)
     # make a dictionary...
     for i, word in enumerate(vocab):
+        pos = pos_tag([word])[0][1]
         try:
             temp = nx.shortest_path(G, target=word, weight='weight')
         except:
             temp = {word:word}
         for key in temp.keys():
-            length = len(paths[key])
-            length_n = len(temp[key])
-            if length == 0 or length < length_n:
-                paths[key] = temp[key]
+            if pos_tag([key])[0][1] == pos:
+                length = len(paths[key])
+                length_n = len(temp[key])
+                if length == 0 or length < length_n:
+                    paths[key] = temp[key]
         if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
             print '    Pathfinder: {:.0f}% \r'.format(per),
@@ -181,11 +190,8 @@ def make_dictionary(G, input_d):
         # if pos == pos_tag([paths[key][0]]):
         if type(paths[key]) != list:
             input_d[key] = [paths[key], paths[key], pos]
-        elif len(paths[key]) >= 2:
+        if len(paths[key]) >= 2:
             input_d[key] = [paths[key][-1], paths[key][1], pos]
-        else:
-            # self as word...?
-            input_d[key] = [list(paths[key])[0], list(paths[key])[0], pos]
         if i % 25  == 0:
             per = 100.0*i/float(len(paths))
             print '    Dictionary: {:.0f}% \r'.format(per),
@@ -208,8 +214,6 @@ if __name__ == '__main__':
     # print G.nodes()
     newd = pickle.load(open('../data/basic_english - Copy small.pickle',
                            'rb'))
-    print newd['writ']
-    print newd['spoon']
     del model
     # newd = {'foo':['foo', 'foo', 'NN'], 'word':['word', 'word', 'NN']}
     thed = make_dictionary(G, newd)
