@@ -109,7 +109,7 @@ def find_sims(model, model_name):
     return ret
 
 def get_sims(model_name, model):
-    ret = find_sims(model)
+    ret = find_sims(model, model_name)
     return ret
 
 def get_google():
