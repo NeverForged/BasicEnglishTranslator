@@ -8,12 +8,19 @@ import cPickle as pickle
 import networkx as nx
 import nxpd as nxpd
 import sys
+import numpy as np
 
 
 def find_sims(model, model_name):
     '''
     Given a Gensim model, creates a dictionary of lists of words that are the
-    most similar words that share a part of speach (len 0-10)
+    most similar words that share a part of speach.
+
+    Once it has this list, it eliminates words that do not belong in that list
+    + the original word until either (1) the list is length 2 or (2) the base
+    word does not belong.
+
+    Saves the words and 1 - cosine similarity^2
     '''
     try:
         ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
@@ -106,6 +113,9 @@ def find_sims(model, model_name):
                     pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
+    with open('../data/' + model_name + '_sim_dict.pickle',
+              'wb') as handle:
+            pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return ret
 
 def get_sims(model_name, model):
@@ -164,6 +174,13 @@ def make_dictionary(G, input_d):
     This makes a dictionary based on an input_d which is usually created
     by some other process (basic_english dictionary maker, self.words from
     Author class, etc.)
+
+    Takes the graph model made from the sims dictionary and searches for the
+    shortest path by distance, where each edge has a value of sine similarity^2
+    (aka 1 - cosine similarity^2), to each 'valid' word given by the input
+    dictionary, in order from longest to shortest words.  If another word has a
+    'shorter' (by edge = 1 measurement) path, it replaces it until all words
+    that are in a graph with words in our dictionary have been mapped.
     '''
     vocab = input_d.keys()
     vocab.sort()
@@ -178,9 +195,10 @@ def make_dictionary(G, input_d):
         except:
             temp = {word:word}
         for key in temp.keys():
-            length = len(paths[key])
-            length_n = len(temp[key])
-            if length == 0 or length < length_n:
+            print temp[key]
+            length = np.sum([a[1] for a in paths[key]])
+            length_n = np.sum([a[1] for a in temp[key]])
+            if length == 0.0 or length > length_n:
                 paths[key] = temp[key]
         if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
