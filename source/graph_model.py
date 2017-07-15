@@ -52,7 +52,7 @@ def find_sims(model):
     ylst = list('?!12345678"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c')
     keys_length = float(len(model.vocab.keys()))
     for i, word in enumerate(model.vocab.keys()):
-        if word not in dic:
+        if word not in ret:
             if any(x in ylst for x in word):
                 # weird one with punctuation, or a phrase
                 pass
