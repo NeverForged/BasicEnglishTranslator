@@ -76,13 +76,13 @@ def find_sims(model, model_name):
                 a = Thread(target=thread_word_search, args=args)
                 a.start()
                 a.join()
-        if i % 25 == 0:
+        if i % 5 == 0:
             per = 100.0 * i/keys_length
-            if i % 100 == 0:
+            if i % 20 == 0:
                 print 'Get Connections {:.2f}% \  \r'.format(per),
-            elif i % 75 == 0:
+            elif i % 15 == 0:
                 print 'Get Connections {:.2f}% |  \r'.format(per),
-            elif i % 50 == 0:
+            elif i % 10 == 0:
                 print 'Get Connections {:.2f}% /  \r'.format(per),
             else:
                 print 'Get Connections {:.2f}% -  \r'.format(per),
@@ -139,6 +139,8 @@ def thread_word_search(word, ret, model, make_simple,
             ret[word] = nlst + [(word, 0.0)]
         else:
             ret[word] = [(word, 0.0)]
+    else:
+        ret[word] = [(word, 0.0)]
     lock.release()
     if i % 50 == 0:
         args = (model_name + '_sim_dict.pickle', ret, lock)
@@ -237,48 +239,56 @@ def make_dictionary(G, input_d):
     vocab = input_d.keys()
     vocab.sort()
     vocab.sort(key=len, reverse=True)
-
     start = time.clock()
     paths = defaultdict(list)
     # make a dictionary...
-    for i, word in enumerate(vocab):
-
-        temp = nx.dijkstra_predecessor_and_distance(G, source=word,
-                                                        weight='weight')
-        print word, temp
-        # shortest_path(G, target=word, weight='weight')
-        # except:
-        #     temp = {word:word}
-        for key in temp.keys():
-            # compare sin^2 similarity length
-            length = np.sum([a[1] for a in paths[key]])
+    # temp = nx.all_pairs_dijkstra_path_length(G, cutoff=10, weight='weight')
+    try:
+        paths = pickle.load(open('../data/temp_paths.pickle', 'rb'))
+    except:
+        for i, word in enumerate(vocab):
+            # temp = dictionary of source -> diction of target -> length
             try:
-                length_n = np.sum([a[1] for a in temp[key]])
+                temp = nx.single_source_dijkstra_path_length(G, word,
+                                                             weight='weight')
             except:
-                print i, key, temp[key]
-            if length == 0.0 or length > length_n:
-                paths[key] = temp[key]
-        if i % 25 == 0:
-            per = 100.0*i/float(len(vocab))
-            print '    Pathfinder: {:.0f}% \r'.format(per),
-    print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
-    with open('../data/temp_paths.pickle', 'wb') as handle:
-            pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                pass
+            for key in temp.keys():
+                # compare sin^2 similarity length
+                if key not in input_d and len(key) > 2:
+                    try:
+                        length = paths[key][1]
+                    except:
+                        length = 10.0
+                    length_n = temp[key]
+                    if length > length_n:
+                        paths[key] = (input_d[word][0], temp[key])
+            if i % 5 == 0:
+                per = 100.0*i/float(len(vocab))
+                print '    Pathfinder: {:.2f}% \r'.format(per),
+        print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
+        with open('../data/temp_paths.pickle', 'wb') as handle:
+                pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    print paths.keys()[:5]
 
     # now set our dictionary
     start = time.clock()
     for i, key in enumerate(paths.keys()):
-        pos = pos_tag([paths[key][-1]])[0][1]
+        pos = pos_tag([paths[key][0]])[0][1]
         # i still don't trust the pos tagging
         # if pos == pos_tag([paths[key][0]]):
-        if type(paths[key]) != list:
-            input_d[key] = [paths[key], paths[key], pos]
-        if len(paths[key]) >= 2:
-            input_d[key] = [paths[key][-1], paths[key][1], pos]
+        try:
+            conct = nx.shortest_path(G, source=key, target=paths[key][0])[1]
+        except:
+            conct = paths[key][0]
+        input_d[key] = [paths[key][0], conct, pos]
         if i % 25  == 0:
             per = 100.0*i/float(len(paths))
             print '    Dictionary: {:.0f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
+    with open('../data/new.pickle', 'wb') as handle:
+            pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return input_d
 
 if __name__ == '__main__':
@@ -293,7 +303,7 @@ if __name__ == '__main__':
     # d = {'word':['words', 'wordy', 'worded'], 'thing':['word', 'wizzy', 'wick', 'foo'], 'foo':['bar']}
     G, d = make_graph_model(d)
     # print G.nodes()
-    newd = pickle.load(open('../data/basic_english - Copy small.pickle',
+    newd = pickle.load(open('../data/basic_english - Copy.pickle',
                            'rb'))
     keys = newd.keys()
     del model
