@@ -15,6 +15,11 @@ def find_sims(model):
     Given a Gensim model, creates a dictionary of lists of words that are the
     most similar words that share a part of speach (len 0-10)
     '''
+    try:
+        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
+                               'rb'))
+    except:
+        ret = defaultdict(list)
     make_simple = ['CC',  # CC: conjunction, coordinating
                    'DT',  # DT: determiner
                    'IN',  # IN: preposition or conjunction, subordinating
@@ -43,32 +48,40 @@ def find_sims(model):
                    'WRB'  # WRB: Wh-adverb
                    ]
     start = time.clock()
-    ret = defaultdict(list)
+
     ylst = list('?!12345678"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c')
     keys_length = float(len(model.vocab.keys()))
     for i, word in enumerate(model.vocab.keys()):
-        if any(x in ylst for x in word):
-            # weird one with punctuation, or a phrase
-            pass
-        else:
-            # only use the ones I want to replace
-            pos = pos_tag([word.lower()])[0][1]
-            if pos in make_simple:
-                # it's the sort of thing we'd replace...
-                try:
-                    lst = [(a[0], 1 - a[1]**2) for a in
-                           model.most_similar(word.lower())
-                           if a[0].lower() == a[0]]
-                except:
-                    # word wasn't in the vocab after manipulation, skip it
-                    lst = []
-                if len(lst) > 0:
-                    lst = [a for a in lst if not any(x in ylst for x in a[0])]
-                    nlst = []
-                    for a in lst:
-                        if pos_tag([a[0].lower()])[0][1] == pos:
-                            nlst.append(a)
-                    # avoid at least one opposite...
+        if word not in dic:
+            if any(x in ylst for x in word):
+                # weird one with punctuation, or a phrase
+                pass
+            else:
+                # only use the ones I want to replace
+                pos = pos_tag([word.lower()])[0][1]
+                if pos in make_simple:
+                    # it's the sort of thing we'd replace...
+                    try:
+                        # only want the non-proper nouns
+                        lst = [(a[0], 1 - a[1]**2) for a in
+                               model.most_similar(word.lower())
+                               if a[0].lower() == a[0]]
+                    except:
+                        # word wasn't in the vocab after manipulation, skip it
+                        lst = []
+                    if len(lst) > 0:
+                        lst = [a for a in lst if not any(x in ylst for x in a[0])]
+                        nlst = []
+                        for a in lst:
+                            # same part of speach only...
+                            if pos_tag([a[0].lower()])[0][1] == pos:
+                                nlst.append(a)
+                        try:
+                            # grab top 3....
+                            nlst = nlst[:3]
+                        except:
+                            uneeded_step = 0
+                        # avoid at least one opposite...
                         if len(nlst) > 2:
                             wlst = [a[0] for a in nlst]
                             # check which don't match with the original word
@@ -77,7 +90,7 @@ def find_sims(model):
                                 pass
                             else:
                                 nlst.pop(wlst.index(rem))
-                    ret[word] = nlst + [(word, 0.0)]
+                        ret[word] = nlst + [(word, 0.0)]
         if i % 50 == 0:
             per = 100.0 * i/keys_length
             if i % 200 == 0:
@@ -88,19 +101,16 @@ def find_sims(model):
                 print 'Get Connections {:.2f}% /  \r'.format(per),
             else:
                 print 'Get Connections {:.2f}% -  \r'.format(per),
+            with open('../data/' + model_name + '_sim_dict.pickle',
+                      'wb') as handle:
+                    pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
 
     return ret
 
 def get_sims(model_name, model):
-    try:
-        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
-                               'rb'))
-    except:
         ret = find_sims(model)
-        with open('../data/' + model_name + '_sim_dict.pickle', 'wb') as handle:
-                pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return ret
 
 def get_google():
@@ -164,17 +174,15 @@ def make_dictionary(G, input_d):
     paths = defaultdict(list)
     # make a dictionary...
     for i, word in enumerate(vocab):
-        pos = pos_tag([word])[0][1]
         try:
             temp = nx.shortest_path(G, target=word, weight='weight')
         except:
             temp = {word:word}
         for key in temp.keys():
-            if pos_tag([key])[0][1] == pos:
-                length = len(paths[key])
-                length_n = len(temp[key])
-                if length == 0 or length < length_n:
-                    paths[key] = temp[key]
+            length = len(paths[key])
+            length_n = len(temp[key])
+            if length == 0 or length < length_n:
+                paths[key] = temp[key]
         if i % 25 == 0:
             per = 100.0*i/float(len(vocab))
             print '    Pathfinder: {:.0f}% \r'.format(per),
@@ -196,8 +204,6 @@ def make_dictionary(G, input_d):
             per = 100.0*i/float(len(paths))
             print '    Dictionary: {:.0f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
-    with open('../data/temp_dict.pickle', 'wb') as handle:
-            pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return input_d
 
 if __name__ == '__main__':
@@ -214,7 +220,15 @@ if __name__ == '__main__':
     # print G.nodes()
     newd = pickle.load(open('../data/basic_english - Copy small.pickle',
                            'rb'))
+    keys = newd.keys()
     del model
     # newd = {'foo':['foo', 'foo', 'NN'], 'word':['word', 'word', 'NN']}
     thed = make_dictionary(G, newd)
     # print thed
+    missing= 0
+    for key in keys:
+        try:
+            a = thed[key]
+        except:
+            missing += 1
+    print 'missing {} entries'.format(missing)
