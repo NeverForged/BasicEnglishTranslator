@@ -9,6 +9,7 @@ import networkx as nx
 import nxpd as nxpd
 import sys
 import numpy as np
+import threading
 from threading import Thread
 
 
@@ -23,6 +24,8 @@ def find_sims(model, model_name):
 
     Saves the words and 1 - cosine similarity^2
     '''
+    # lock to protect dictionary...
+    lock = threading.Lock()
     try:
         ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
                                'rb'))
@@ -68,73 +71,89 @@ def find_sims(model, model_name):
                 ret[word] = [(word, 100.0)]
             else:
                 # only use the ones I want to replace
-                pos = pos_tag([word.lower()])[0][1]
-                if pos in make_simple:
-                    # it's the sort of thing we'd replace...
-                    try:
-                        # only want the non-proper nouns
-                        lst = [(a[0], 1 - a[1]**2) for a in
-                               model.most_similar(word.lower())
-                               if a[0].lower() == a[0]]
-                    except:
-                        # word wasn't in the vocab after manipulation, skip it
-                        lst = []
-                    if len(lst) > 0:
-                        lst = [a for a in lst if not any(x in ylst for x in a[0])]
-                        nlst = []
-                        for a in lst:
-                            # same part of speach only...
-                            if pos_tag([a[0].lower()])[0][1] == pos:
-                                nlst.append(a)
-                        try:
-                            # grab top 3....
-                            nlst = nlst[:3]
-                        except:
-                            uneeded_step = 0
-                        # avoid at least one opposite...
-                        if len(nlst) > 2:
-                            wlst = [a[0] for a in nlst]
-                            # check which don't match with the original word
-                            rem = model.doesnt_match(wlst + [word])
-                            # avoid errors
-                            if rem != word:
-                                nlst.pop(wlst.index(rem))
-                            try:
-                                # save only the 2 shortest..
-                                nlst = nlst[:2]
-                            except:
-                                nlst = nlst
-                        # make sure it's a list (of tuples)
-                        if type(nlst) != list:
-                            nlst = [nlst]
-                        ret[word] = nlst + [(word, 0.0)]
-                    else:
-                        ret[word] = [(word, 0.0)]
-        if i % 50 == 0:
+                args = (word, ret, model, make_simple,
+                        lock, ylst, i, model_name)
+                a = Thread(target=thread_word_search, args=args)
+                a.start()
+                a.join()
+        if i % 25 == 0:
             per = 100.0 * i/keys_length
-            if i % 200 == 0:
+            if i % 100 == 0:
                 print 'Get Connections {:.2f}% \  \r'.format(per),
-            elif i % 150 == 0:
+            elif i % 75 == 0:
                 print 'Get Connections {:.2f}% |  \r'.format(per),
-            elif i % 100 == 0:
+            elif i % 50 == 0:
                 print 'Get Connections {:.2f}% /  \r'.format(per),
             else:
                 print 'Get Connections {:.2f}% -  \r'.format(per),
-            args = (model_name + '_sim_dict.pickle', ret)
-            a = Thread(target=save_to_pickle, args=args)
-            a.start()
-            a.join()
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
+    args = (model_name + '_sim_dict.pickle', ret, lock)
+    a = Thread(target=save_to_pickle, args=args)
+    a.start()
+    a.join()
 
     return ret
 
-def save_to_pickle(name, info):
+def thread_word_search(word, ret, model, make_simple,
+                       lock, ylst, i, model_name):
+    '''
+    The actual word search, here so I can run in threads.
+    Grabs a lock.
+    Does some voodoo
+    releases the lock.
+    '''
+    lock.acquire()
+    pos = pos_tag([word.lower()])[0][1]
+    if pos in make_simple:
+        # it's the sort of thing we'd replace...
+        try:
+            # only want the non-proper nouns
+            lst = [(a[0], 1 - a[1]**2) for a in
+                   model.most_similar(word.lower())
+                   if a[0].lower() == a[0]]
+        except:
+            # word wasn't in the vocab after manipulation, skip it
+            lst = []
+        if len(lst) > 0:
+            lst = [a for a in lst if not any(x in ylst for x in a[0])]
+            nlst = []
+            for a in lst:
+                # same part of speach only...
+                if pos_tag([a[0].lower()])[0][1] == pos:
+                    nlst.append(a)
+            # grab top 3...
+            if len(nlst) >= 3:
+                nlst = nlst[:3]
+            # avoid at least one opposite...
+            if len(nlst) > 2:
+                wlst = [a[0] for a in nlst]
+                # check which don't match with the original word
+                rem = model.doesnt_match(wlst + [word])
+                # avoid errors
+                if rem != word:
+                    nlst.pop(wlst.index(rem))
+            # make sure it's a list (of tuples)
+            if type(nlst) != list:
+                nlst = [nlst]
+            ret[word] = nlst + [(word, 0.0)]
+        else:
+            ret[word] = [(word, 0.0)]
+    lock.release()
+    if i % 50 == 0:
+        args = (model_name + '_sim_dict.pickle', ret, lock)
+        a = Thread(target=save_to_pickle, args=args)
+        a.start()
+        a.join()
+
+def save_to_pickle(name, info, lock):
     '''
     In a function to avoid kboard interruptions
     '''
+    lock.acquire()
     with open('../data/' + name, 'wb') as handle:
             pickle.dump(info, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    lock.release()
 
 def get_sims(model_name, model):
     try:
