@@ -62,7 +62,7 @@ def find_sims(model, model_name):
         if word not in ret:
             if any(x in ylst for x in word):
                 # weird one with punctuation, or a phrase
-                pass
+                ret[word] = [(word, 100.0)]
             else:
                 # only use the ones I want to replace
                 pos = pos_tag([word.lower()])[0][1]
@@ -126,7 +126,22 @@ def find_sims(model, model_name):
     return ret
 
 def get_sims(model_name, model):
-    ret = find_sims(model, model_name)
+    try:
+        # grab the sims model, check if complete
+        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
+                               'rb'))
+        missing = 0
+        for word in model.vocab.keys():
+            if word not in ret:
+                missing += 1
+        if missing >= 1:
+            # need to finish building the sims model
+            print 'missing {} words of {}'.format(missing,
+                                                  len(model.vocab.keys()))
+            ret = find_sims(model, model_name)
+    except:
+        # need to start building the sims model
+        ret = find_sims(model, model_name)
     return ret
 
 def get_google():
@@ -197,14 +212,20 @@ def make_dictionary(G, input_d):
     paths = defaultdict(list)
     # make a dictionary...
     for i, word in enumerate(vocab):
-        try:
-            temp = nx.shortest_path(G, target=word, weight='weight')
-        except:
-            temp = {word:word}
+
+        temp = nx.dijkstra_predecessor_and_distance(G, source=word,
+                                                        weight='weight')
+        print temp
+        # shortest_path(G, target=word, weight='weight')
+        # except:
+        #     temp = {word:word}
         for key in temp.keys():
             # compare sin^2 similarity length
             length = np.sum([a[1] for a in paths[key]])
-            length_n = np.sum([a[1] for a in temp[key]])
+            try:
+                length_n = np.sum([a[1] for a in temp[key]])
+            except:
+                print i, key, temp[key]
             if length == 0.0 or length > length_n:
                 paths[key] = temp[key]
         if i % 25 == 0:
