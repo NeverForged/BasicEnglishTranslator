@@ -62,6 +62,8 @@ def find_sims(model, model_name):
         if word not in ret:
             if any(x in ylst for x in word):
                 # weird one with punctuation, or a phrase
+                # 100.0 ensures it won't show up later, but will not waste
+                #  time in that list comprehension
                 ret[word] = [(word, 100.0)]
             else:
                 # only use the ones I want to replace
@@ -105,6 +107,8 @@ def find_sims(model, model_name):
                         if type(nlst) != list:
                             nlst = [nlst]
                         ret[word] = nlst + [(word, 0.0)]
+                    else:
+                        ret[word] = [(word, 0.0)]
         if i % 50 == 0:
             per = 100.0 * i/keys_length
             if i % 200 == 0:
@@ -215,7 +219,7 @@ def make_dictionary(G, input_d):
 
         temp = nx.dijkstra_predecessor_and_distance(G, source=word,
                                                         weight='weight')
-        print temp
+        print word, temp
         # shortest_path(G, target=word, weight='weight')
         # except:
         #     temp = {word:word}
