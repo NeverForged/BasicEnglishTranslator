@@ -93,10 +93,17 @@ def find_sims(model, model_name):
                             wlst = [a[0] for a in nlst]
                             # check which don't match with the original word
                             rem = model.doesnt_match(wlst + [word])
-                            if rem == word:
-                                pass
-                            else:
+                            # avoid errors
+                            if rem != word:
                                 nlst.pop(wlst.index(rem))
+                            try:
+                                # save only the 2 shortest..
+                                nlst = nlst[:2]
+                            except:
+                                nlst = nlst
+                        # make sure it's a list (of tuples)
+                        if type(nlst) != list:
+                            nlst = [nlst]
                         ret[word] = nlst + [(word, 0.0)]
         if i % 50 == 0:
             per = 100.0 * i/keys_length
@@ -195,7 +202,7 @@ def make_dictionary(G, input_d):
         except:
             temp = {word:word}
         for key in temp.keys():
-            print temp[key]
+            # compare sin^2 similarity length
             length = np.sum([a[1] for a in paths[key]])
             length_n = np.sum([a[1] for a in temp[key]])
             if length == 0.0 or length > length_n:
