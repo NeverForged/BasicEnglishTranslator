@@ -10,7 +10,7 @@ import nxpd as nxpd
 import sys
 
 
-def find_sims(model):
+def find_sims(model, model_name):
     '''
     Given a Gensim model, creates a dictionary of lists of words that are the
     most similar words that share a part of speach (len 0-10)
