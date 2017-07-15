@@ -106,11 +106,10 @@ def find_sims(model):
                     pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
-
     return ret
 
 def get_sims(model_name, model):
-        ret = find_sims(model)
+    ret = find_sims(model)
     return ret
 
 def get_google():
