@@ -9,6 +9,7 @@ import networkx as nx
 import nxpd as nxpd
 import sys
 import numpy as np
+from threading import Thread
 
 
 def find_sims(model, model_name):
@@ -119,15 +120,21 @@ def find_sims(model, model_name):
                 print 'Get Connections {:.2f}% /  \r'.format(per),
             else:
                 print 'Get Connections {:.2f}% -  \r'.format(per),
-            with open('../data/' + model_name + '_sim_dict.pickle',
-                      'wb') as handle:
-                    pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            args = (model_name + '_sim_dict.pickle', ret)
+            a = Thread(target=save_to_pickle, args=args)
+            a.start()
+            a.join()
     end = time.clock()
     print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
-    with open('../data/' + model_name + '_sim_dict.pickle',
-              'wb') as handle:
-            pickle.dump(ret, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     return ret
+
+def save_to_pickle(name, info):
+    '''
+    In a function to avoid kboard interruptions
+    '''
+    with open('../data/' + name, 'wb') as handle:
+            pickle.dump(info, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def get_sims(model_name, model):
     try:
