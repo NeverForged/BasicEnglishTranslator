@@ -11,7 +11,7 @@ import sys
 import numpy as np
 import threading
 from threading import Thread
-
+from Author import Author
 
 def find_sims(model, model_name):
     '''
@@ -223,7 +223,7 @@ def make_graph_model(d):
     print 'G took {:.2f}s'.format(time.clock() - start)
     return G, d
 
-def make_dictionary(G, input_d):
+def make_dictionary(a, G, input_d):
     '''
     This makes a dictionary based on an input_d which is usually created
     by some other process (basic_english dictionary maker, self.words from
@@ -250,9 +250,9 @@ def make_dictionary(G, input_d):
             # temp = dictionary of source -> diction of target -> length
             try:
                 temp = nx.single_source_dijkstra_path_length(G, word,
-                                                             weight='weight')
+                                                            weight='weight')
             except:
-                pass
+                temp = {}
             for key in temp.keys():
                 # compare sin^2 similarity length
                 if key not in input_d and len(key) > 2:
@@ -262,10 +262,10 @@ def make_dictionary(G, input_d):
                         length = 10.0
                     length_n = temp[key]
                     if length > length_n:
-                        paths[key] = (input_d[word][0], temp[key])
-            if i % 5 == 0:
+                        paths[key] = (input_d[word][0], temp[key], input_d[word][1])
+            if i % 25 == 0:
                 per = 100.0*i/float(len(vocab))
-                print '    Pathfinder: {:.2f}% \r'.format(per),
+                print 'Pathfinder({}):  {:.2f}%'.format(a, per)
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
         with open('../data/temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -278,18 +278,64 @@ def make_dictionary(G, input_d):
         pos = pos_tag([paths[key][0]])[0][1]
         # i still don't trust the pos tagging
         # if pos == pos_tag([paths[key][0]]):
-        try:
-            conct = nx.shortest_path(G, source=key, target=paths[key][0])[1]
-        except:
-            conct = paths[key][0]
-        input_d[key] = [paths[key][0], conct, pos]
+        input_d[key] = [paths[key][0], paths[key][2], pos]
         if i % 25  == 0:
             per = 100.0*i/float(len(paths))
             print '    Dictionary: {:.0f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
-    with open('../data/new.pickle', 'wb') as handle:
-            pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    if a == 'Basic':
+        with open('../data/temp_basic_english.pickle', 'wb') as handle:
+                pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    else:
+        with open('../data/temp_' + a + '.pickle', 'wb') as handle:
+                pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return input_d
+
+
+def set_words(author, lock):
+    '''
+    Using threading to make multiple Author's at once.
+    '''
+    lock.acquire()
+    # first, need to grab the dictionary of the Author...
+    a = author.encode('ascii', 'replace')
+    a = a.lower().strip().replace(' ','_')
+    try:
+        if author == 'Basic':
+            newd = pickle.load(open('../data/basic_english - Copy.pickle', 'rb'))
+        else:
+            try:
+                newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
+            except:
+                Author(author)
+                newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
+
+        keys = newd.keys()
+        thed = make_dictionary(a, G, newd)
+        missing= 0
+        for key in keys:
+            try:
+                alpha = thed[key]
+            except:
+                missing += 1
+        print '{} missing {} entries'.format(author, missing)
+    except:
+        print 'Author Failed: {}'.format(author)
+
+    # save it...
+    if missing == 0:
+        if author == 'Basic':
+            with open('../data/basic_english.pickle', 'wb') as handle:
+                    pickle.dump(thed, handle,
+                                protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            with open('../authors/' + a +'_words', 'wb') as handle:
+                    pickle.dump(thed, handle,
+                                protocol=pickle.HIGHEST_PROTOCOL)
+            with open('../authors/' + a +'_words_og', 'wb') as handle:
+                    pickle.dump(newd, handle,
+                                protocol=pickle.HIGHEST_PROTOCOL)
+    lock.release()
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -298,22 +344,17 @@ if __name__ == '__main__':
     else:
         model = get_sentence_model()
     d = get_sims('test', model)
-    print d['writ']
-    print d['spoon']
-    # d = {'word':['words', 'wordy', 'worded'], 'thing':['word', 'wizzy', 'wick', 'foo'], 'foo':['bar']}
     G, d = make_graph_model(d)
-    # print G.nodes()
-    newd = pickle.load(open('../data/basic_english - Copy.pickle',
-                           'rb'))
-    keys = newd.keys()
+
     del model
-    # newd = {'foo':['foo', 'foo', 'NN'], 'word':['word', 'word', 'NN']}
-    thed = make_dictionary(G, newd)
-    # print thed
-    missing= 0
-    for key in keys:
-        try:
-            a = thed[key]
-        except:
-            missing += 1
-    print 'missing {} entries'.format(missing)
+    lock = threading.Lock()
+    lst = ['Basic',
+           'Alexandre Dumas',
+           'Jane Austin',
+           'Lewis Carroll',
+           'Shakespeare']
+    for author in lst:
+    args = (author, lock)
+        a = Thread(target=save_to_pickle, args=args)
+        a.start()
+        a.join()
