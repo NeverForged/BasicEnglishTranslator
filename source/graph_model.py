@@ -27,8 +27,7 @@ def find_sims(model, model_name):
     # lock to protect dictionary...
     lock = threading.Lock()
     # try:
-    ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
-                               'rb'))
+    ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle', 'rb'))
     # except:
     #     ret = defaultdict(list)
     make_simple = ['CC',  # CC: conjunction, coordinating
