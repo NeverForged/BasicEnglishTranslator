@@ -294,7 +294,7 @@ def set_words(author, lock):
     '''
     Using threading to make multiple Author's at once.
     '''
-    lock.acquire()
+    # lock.acquire()
     # first, need to grab the dictionary of the Author...
     a = author.encode('ascii', 'replace')
     a = a.lower().strip().replace(' ','_')
@@ -333,7 +333,7 @@ def set_words(author, lock):
             with open('../authors/' + a +'_words_og', 'wb') as handle:
                     pickle.dump(newd, handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
-    lock.release()
+    # lock.release()
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -352,8 +352,13 @@ if __name__ == '__main__':
            'Lewis Carroll',
            'Shakespeare']
     # lets do this...
+    threads = []
     for author in lst:
         args = (author, lock)
-        a = Thread(target=set_words, args=args)
-        a.start()
-        a.join()
+        threads.append(Thread(target=set_words, args=args))
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
