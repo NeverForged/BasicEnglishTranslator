@@ -26,11 +26,11 @@ def find_sims(model, model_name):
     '''
     # lock to protect dictionary...
     lock = threading.Lock()
-    try:
-        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
+    # try:
+    ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
                                'rb'))
-    except:
-        ret = defaultdict(list)
+    # except:
+    #     ret = defaultdict(list)
     make_simple = ['CC',  # CC: conjunction, coordinating
                    'DT',  # DT: determiner
                    'IN',  # IN: preposition or conjunction, subordinating
