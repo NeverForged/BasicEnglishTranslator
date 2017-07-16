@@ -269,7 +269,7 @@ def make_dictionary(a, G, input_d):
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
         with open('../data/temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                
+
     # now set our dictionary
     start = time.clock()
     for i, key in enumerate(paths.keys()):
@@ -351,6 +351,7 @@ if __name__ == '__main__':
            'Jane Austin',
            'Lewis Carroll',
            'Shakespeare']
+    # lets do this...
     for author in lst:
         args = (author, lock)
         a = Thread(target=set_words, args=args)

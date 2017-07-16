@@ -91,10 +91,12 @@ class Author():
             try:
                 print '   ...checking for a model...'
                 self.author_model = gensim.models.KeyedVectors.load_word2vec_format('../model/' + a + '.bin')
+                self.author_model.init_sims(replace=True)
                 print '      ...model found.'
             except:
                 print '      ...none found, building...'
                 self.author_model = self.word_2_vec()
+                self.author_model.init_sims(replace=True)
                 print '         ...done.'
             print '   ....creating the dictionary...'
             for word in pos_tag(self.author_model.wv.vocab.keys()):
@@ -209,8 +211,7 @@ class Author():
         count_replacements = 0
         self.lst_ret = []
         for idx, word in enumerate(words):
-            if word[1] in pass_thru:
-                # put it in and move on... it's proper or whatever
+            if word[1] in pass_thru:                # put it in and move on... it's proper or whatever
                 self.lst_ret.append(word[0])
             else:
                 # We have a word we need to replace...
@@ -232,7 +233,7 @@ class Author():
                     # t = threading.Thread(target=self.find_word, args=argu)
                     # t.daemon = True
                     # t.start()
-                    abc = self.find_word(clean, word[0], word[1])
+                    # abc = self.find_word(clean, word[0], word[1])
             # handle add/subtract issues..
             idx = len(self.lst_ret) - 1
             if add_adjec and word[1] in self.noun and last not in self.adj:
@@ -266,72 +267,72 @@ class Author():
                                 handle, protocol=pickle.HIGHEST_PROTOCOL)
         return txt
 
-    def find_word(self, clean, wrd, prt):
-        '''
-        If a word is not in the dictionary, this looks for the word given the
-        most simmilar word(s) in the model loaded, determines if the simmilar
-        word has been mapped already, and inserts it into the model.
-        Looks for most similar word to that word in the model, then makes a
-        length-threshold list of words most similar to the word before.
-        Checks if these words were mapped, POS dependent.  if so, makes the
-        same mapping.
-        '''
-        lst_ret = [clean]
-        # try: # in case it fails...
-        lst = []
-        try:
-            lst = [a[0] for a in self.model.most_similar(wrd)]
-        except KeyError as e:
-            if self.verbose:
-                print str(e)
-        if len(lst) >= 1:
-            for i in xrange(self.threshold):
-                c = self.model.most_similar(lst[i], topn=self.threshold)
-                for d in c:
-                    lst.append(d[0])
-        lst = list(set(lst))
-        # collect only those words in the dictionary...
-        #    ...and order by simalarity
-        lst = [(self.clean_word(a), self.model.similarity(wrd, a)) for a in lst
-               if self.clean_word(a) in self.words]
-        lst = sorted(lst, key=lambda x: -x[1])
-        # lst in order
-        # also, everything was mapping to 'i' for some reason...
-        lst = [a[0] for a in lst if len(a[0]) > 1]
-        n = 0
-        done = 0
-        # since we ordered by similarity, best go first
-        for item in lst:
-            # must match w/part of speach...
-            if done == 0:
-                b = pos_tag([item])[0][1]
-                lst_ret.append(item)
-                if b == prt:
-                    # add to dictionary...based on what's there,
-                    # retaining grouping info
-                    done = 1
-                    tmp = self.class_dictionary[item][0]
-                    self.class_dictionary[clean] = [tmp, item, prt]
-                    # add to lst...at the idx that cllaed it
-                    idx = len(self.lst_ret) - 1
-                    self.lst_ret[idx] = self.retain_capitalization(
-                        self.class_dictionary[item][0], wrd)
-                    if len(tmp) > 1 and len(item) > 1:
-                        self.words[clean] = [tmp, item, prt]
-                    lst_ret.append('*added: {}, {}*'.format(tmp, item))
-            if done == 0:
-                cln = clean.lower()
-                a = pos_tag([cln])[0][1]
-                self.class_dictionary[clean] = [cln, cln, a]
-                lst_ret.append(
-                    self.retain_capitalization(
-                        self.class_dictionary[clean][0], wrd))
-        # except:
-        #     lst_ret.append('ERRORED OUT')
-        #     self.class_dictionary[clean] = [clean, None, prt]
-        if self.verbose:
-            print lst_ret
-        return lst_ret
+    # def find_word(self, clean, wrd, prt):
+    #     '''
+    #     If a word is not in the dictionary, this looks for the word given the
+    #     most simmilar word(s) in the model loaded, determines if the simmilar
+    #     word has been mapped already, and inserts it into the model.
+    #     Looks for most similar word to that word in the model, then makes a
+    #     length-threshold list of words most similar to the word before.
+    #     Checks if these words were mapped, POS dependent.  if so, makes the
+    #     same mapping.
+    #     '''
+    #     lst_ret = [clean]
+    #     # try: # in case it fails...
+    #     lst = []
+    #     try:
+    #         lst = [a[0] for a in self.model.most_similar(wrd)]
+    #     except KeyError as e:
+    #         if self.verbose:
+    #             print str(e)
+    #     if len(lst) >= 1:
+    #         for i in xrange(self.threshold):
+    #             c = self.model.most_similar(lst[i], topn=self.threshold)
+    #             for d in c:
+    #                 lst.append(d[0])
+    #     lst = list(set(lst))
+    #     # collect only those words in the dictionary...
+    #     #    ...and order by simalarity
+    #     lst = [(self.clean_word(a), self.model.similarity(wrd, a)) for a in lst
+    #            if self.clean_word(a) in self.words]
+    #     lst = sorted(lst, key=lambda x: -x[1])
+    #     # lst in order
+    #     # also, everything was mapping to 'i' for some reason...
+    #     lst = [a[0] for a in lst if len(a[0]) > 1]
+    #     n = 0
+    #     done = 0
+    #     # since we ordered by similarity, best go first
+    #     for item in lst:
+    #         # must match w/part of speach...
+    #         if done == 0:
+    #             b = pos_tag([item])[0][1]
+    #             lst_ret.append(item)
+    #             if b == prt:
+    #                 # add to dictionary...based on what's there,
+    #                 # retaining grouping info
+    #                 done = 1
+    #                 tmp = self.class_dictionary[item][0]
+    #                 self.class_dictionary[clean] = [tmp, item, prt]
+    #                 # add to lst...at the idx that cllaed it
+    #                 idx = len(self.lst_ret) - 1
+    #                 self.lst_ret[idx] = self.retain_capitalization(
+    #                     self.class_dictionary[item][0], wrd)
+    #                 if len(tmp) > 1 and len(item) > 1:
+    #                     self.words[clean] = [tmp, item, prt]
+    #                 lst_ret.append('*added: {}, {}*'.format(tmp, item))
+    #         if done == 0:
+    #             cln = clean.lower()
+    #             a = pos_tag([cln])[0][1]
+    #             self.class_dictionary[clean] = [cln, cln, a]
+    #             lst_ret.append(
+    #                 self.retain_capitalization(
+    #                     self.class_dictionary[clean][0], wrd))
+    #     # except:
+    #     #     lst_ret.append('ERRORED OUT')
+    #     #     self.class_dictionary[clean] = [clean, None, prt]
+    #     if self.verbose:
+    #         print lst_ret
+    #     return lst_ret
 
     def get_books(self):
         '''
@@ -592,7 +593,7 @@ if __name__ == '__main__':
     rnd = random.randint(0,10)
     try:
         num_runs = int(sys.argv[1])
-    else:
+    except:
         num_runs = 500
     lspace = np.linspace(rnd*15, (num-rnd)*15, num_runs)
     texts = []
@@ -611,4 +612,4 @@ if __name__ == '__main__':
         trans.fit(text)
         print '{} | {} | {}'.format(len(trans.save_dictionary),
                                     len(dumas.words),
-                                    len(austin.words)
+                                    len(austin.words))
