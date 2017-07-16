@@ -244,7 +244,7 @@ def make_dictionary(a, G, input_d):
     # make a dictionary...
     # temp = nx.all_pairs_dijkstra_path_length(G, cutoff=10, weight='weight')
     try:
-        paths = pickle.load(open('../data/temp_paths.pickle', 'rb'))
+        paths = pickle.load(open('../data/' + a + 'temp_paths.pickle', 'rb'))
     except:
         for i, word in enumerate(vocab):
             # temp = dictionary of source -> diction of target -> length
@@ -267,7 +267,7 @@ def make_dictionary(a, G, input_d):
                 per = 100.0*i/float(len(vocab))
                 print 'Pathfinder({}):  {:.2f}%'.format(a, per)
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
-        with open('../data/temp_paths.pickle', 'wb') as handle:
+        with open('../data/' + a + 'temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # now set our dictionary
