@@ -356,8 +356,8 @@ def clean_word(word):
         word = word
     prt = set(string.printable)
     word = filter(lambda x: x in prt, word)
-    word = text.encode('utf-8')
-    word = re.sub("\xe2\x80\x93", "-", text)
+    word = word.encode('utf-8')
+    word = re.sub("\xe2\x80\x93", "-", word)
     return word.lower()
 
 if __name__ == '__main__':
