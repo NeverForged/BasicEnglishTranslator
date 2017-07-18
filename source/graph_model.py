@@ -273,7 +273,10 @@ def make_dictionary(a, G, input_d):
     # now set our dictionary
     start = time.clock()
     for i, key in enumerate(paths.keys()):
-        pos = pos_tag([paths[key][0]])[0][1]
+        try:
+            pos = pos_tag([paths[key][0]])[0][1]
+        except:
+            print paths[key]
         # i still don't trust the pos tagging
         # if pos == pos_tag([paths[key][0]]):
         input_d[key] = [paths[key][0], paths[key][2], pos]
