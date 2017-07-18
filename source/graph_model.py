@@ -11,7 +11,6 @@ import sys
 import numpy as np
 import threading
 from threading import Thread
-from Author import Author
 
 def find_sims(model, model_name):
     '''
@@ -240,12 +239,12 @@ def make_dictionary(a, G, input_d):
     vocab.sort()
     vocab.sort(key=len, reverse=True)
     start = time.clock()
-    paths = defaultdict(list)
     # make a dictionary...
     # temp = nx.all_pairs_dijkstra_path_length(G, cutoff=10, weight='weight')
     try:
         paths = pickle.load(open('../data/' + a + 'temp_paths.pickle', 'rb'))
     except:
+        paths = defaultdict(list)
         for i, word in enumerate(vocab):
             # temp = dictionary of source -> diction of target -> length
             try:
@@ -275,14 +274,15 @@ def make_dictionary(a, G, input_d):
     for i, key in enumerate(paths.keys()):
         try:
             pos = pos_tag([paths[key][0]])[0][1]
+
+            # i still don't trust the pos tagging
+            # if pos == pos_tag([paths[key][0]]):
+            input_d[key] = [paths[key][0], paths[key][2], pos]
+            if i % 25  == 0:
+                per = 100.0*i/float(len(paths))
         except:
             print key, paths[key]
-        # i still don't trust the pos tagging
-        # if pos == pos_tag([paths[key][0]]):
-        input_d[key] = [paths[key][0], paths[key][2], pos]
-        if i % 25  == 0:
-            per = 100.0*i/float(len(paths))
-            print '    Dictionary: {:.0f}% \r'.format(per),
+        print '    Dictionary: {:.0f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
     if a == 'Basic':
         with open('../data/temp_basic_english.pickle', 'wb') as handle:
