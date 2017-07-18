@@ -13,6 +13,7 @@ import threading
 from threading import Thread
 import string
 import unicodedata
+import re
 
 def find_sims(model, model_name):
     '''
