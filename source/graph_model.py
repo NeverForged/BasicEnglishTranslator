@@ -280,7 +280,7 @@ def make_dictionary(a, G, input_d):
 
     # now set our dictionary
     start = time.clock()
-    for i, key in enumerate(paths.keys()):
+    for i, key in enumerate(paths.keys()):,
         try:
             pos = pos_tag([paths[key][0]])[0][1]
 
@@ -289,11 +289,11 @@ def make_dictionary(a, G, input_d):
             input_d[key.lower()] = [paths[key][0].lower(),
                                     paths[key][2].lower(),
                                     pos]
-            if i % 25  == 0:
-                per = 100.0*i/float(len(paths))
         except:
             print key, paths[key]
-        print '    Dictionary: {:.0f}% \r'.format(per),
+        if i % 25  == 0:
+            per = 100.0*i/float(len(paths))
+            print '    Dictionary: {:.0f}% \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
     if a == 'Basic':
         with open('../data/temp_basic_english.pickle', 'wb') as handle:
