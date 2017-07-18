@@ -27,6 +27,7 @@ Given how long *gensim* functions take to run, forcing a user to wait for *gensi
 
 ## **Evaluation**
 <section id="graphic_2" markdown="1"><img align="right" src="/images/flesch-kincaid_graph.png" alt="Flesch-Kincaid scores of original document on the x-axis, and the difference between the translated and the original on the y."></section>
+
 1. **Checking Basic English Translator:** For this I scraped some articles from both [Simple English Wikipedia](https://simple.wikipedia.org/wiki/Main_Page) and [Standard English Wikipedia](https://en.wikipedia.org/wiki/Main_Page).  I then calculated the complexity of the text, using [Flesch-Kincaid reading levels](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests), and compared the original documents to the translations provided by my model.
     * !["Flesch-Kincaid scores of original document on the x-axis, and the difference between the translated and the original on the y."](/images/flesch-kincaid_graph.png)
 2. **Look at Actual Text** While not effective to check everything, it does allow for some basic intuition on the text itself.  Example below is the simple Wikipedia article for ["spoon"](https://simple.wikipedia.org/wiki/Spoon):
