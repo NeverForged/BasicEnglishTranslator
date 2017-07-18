@@ -339,8 +339,8 @@ if __name__ == '__main__':
     #         model = get_google()
     # else:
     #     model = get_sentence_model()
-    # d = get_sims('test', model)
-    # G, d = make_graph_model(d)
+    d = get_sims('test', model)
+    G, d = make_graph_model(d)
     #
     # del model
     lock = threading.Lock()
