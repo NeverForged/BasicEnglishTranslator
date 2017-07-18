@@ -250,6 +250,7 @@ def make_dictionary(a, G, input_d):
         print 'Pathfinder - Started'
         paths = defaultdict(list)
         len_vocab = len(vocab)
+        per = 0
         for i, word in enumerate(vocab):
             # temp = dictionary of source -> diction of target -> length
             try:
