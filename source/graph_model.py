@@ -334,9 +334,9 @@ def set_words(author, lock):
     # lock.release()
 
 if __name__ == '__main__':
-    # if len(sys.argv) > 1:
-    #     if sys.argv[1].lower() == 'google':
-    #         model = get_google()
+    if len(sys.argv) > 1:
+        if sys.argv[1].lower() == 'google':
+            model = get_google()
     # else:
     #     model = get_sentence_model()
     d = get_sims('test', model)
