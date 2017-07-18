@@ -157,6 +157,7 @@ def save_to_pickle(name, info, lock):
     lock.release()
 
 def get_sims(model_name, model):
+    missing = 0
     try:
         # grab the sims model, check if complete
         ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
@@ -297,27 +298,24 @@ def set_words(author, lock):
     # first, need to grab the dictionary of the Author...
     a = author.encode('ascii', 'replace')
     a = a.lower().strip().replace(' ','_')
-    try:
-        if author == 'Basic':
-            newd = pickle.load(open('../data/basic_english - Copy.pickle', 'rb'))
-        else:
-            try:
-                newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
-            except:
-                Author(author)
-                newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
+    missing = 0
+    if author == 'Basic':
+        newd = pickle.load(open('../data/basic_english - Copy.pickle', 'rb'))
+    else:
+        try:
+            newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
+        except:
+            Author(author)
+            newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
 
-        keys = newd.keys()
-        thed = make_dictionary(a, G, newd)
-        missing= 0
-        for key in keys:
-            try:
-                alpha = thed[key]
-            except:
-                missing += 1
-        print '{} missing {} entries'.format(author, missing)
-    except:
-        print 'Author Failed: {}'.format(author)
+    keys = newd.keys()
+    thed = make_dictionary(a, G, newd) for key in keys:
+        try:
+            alpha = thed[key]
+        except:
+            missing += 1
+    print '{} missing {} entries'.format(author, missing)
+
 
     # save it...
     if missing == 0:
@@ -335,21 +333,17 @@ def set_words(author, lock):
     # lock.release()
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        if sys.argv[1].lower() == 'google':
-            model = get_google()
-    else:
-        model = get_sentence_model()
-    d = get_sims('test', model)
-    G, d = make_graph_model(d)
-
-    del model
+    # if len(sys.argv) > 1:
+    #     if sys.argv[1].lower() == 'google':
+    #         model = get_google()
+    # else:
+    #     model = get_sentence_model()
+    # d = get_sims('test', model)
+    # G, d = make_graph_model(d)
+    #
+    # del model
     lock = threading.Lock()
-    lst = ['Basic',
-           'Alexandre Dumas',
-           'Jane Austin',
-           'Lewis Carroll',
-           'Shakespeare']
+    lst = ['Basic']
     # lets do this...
     threads = []
     for author in lst:
