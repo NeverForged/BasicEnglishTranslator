@@ -14,8 +14,8 @@ The goal of the Basic English Translator was to take this idea, specifically the
 
 ## **Data Preparation**
 Given how long *gensim* functions take to run, forcing a user to wait for *gensim* to calculate cosine similarities is not practical.  Instead, I will create a dictionary (in both the pythonic and literal sense of the term) to map English words to words that appear on Ogden's list.  The following flow chart shows this process:
-
-<img align="center" src/images/data_prep.png" alt="Blue -> BasicEnglishTranslator.py/graph_model.py Functions, Green -> gensim, Purple -> networkx, red -> nlt">
+<section id="graphic_1" markdown="1">
+<img align="center" src/images/data_prep.png" alt="Blue -> BasicEnglishTranslator.py/graph_model.py Functions, Green -> gensim, Purple -> networkx, red -> nlt"></section>
 
 * **First, find "best" matches for a word:** This is done by taking a *gensim* model (in my case [google news](https://github.com/mmihaltz/word2vec-GoogleNews-vectors/blob/master/GoogleNews-vectors-negative300.bin.gz))...
   * Take each word, and find the top 10 connections (by cosine similarity)
