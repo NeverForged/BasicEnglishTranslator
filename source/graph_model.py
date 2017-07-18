@@ -384,6 +384,6 @@ if __name__ == '__main__':
     threads = []
     for author in lst:
         args = (author, lock)
-        a = Thread(target=set_words, args=args))
+        a = Thread(target=set_words, args=args)
         a.start()
         a.join()
