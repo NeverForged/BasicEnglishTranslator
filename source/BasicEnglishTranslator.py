@@ -148,14 +148,10 @@ class BasicEnglishTranslator():
                     # set as if we couldn't find it...
                     self.lst_ret.append(self.retain_capitalization(clean,
                                                                    word[0]))
-                    # start a thread to look for it...
-                    # argu = (clean, idx, word[0], word[1])
-                    # t = threading.Thread(target=self.find_word, args=argu)
-                    # t.daemon = True
-                    # t.start()
+
         end = time.clock()
-        if self.verbose:
-            print 'Time: {:.4f}s'.format(end-start)
+        # if self.verbose:
+        #     print 'Time: {:.4f}s'.format(end - start)
         txt = self.replace_punctuation(' '.join(self.lst_ret))
         txt = txt.encode('utf-8')
         txt = re.sub("\xe2\x80\x93", "-", txt)
