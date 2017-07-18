@@ -280,7 +280,8 @@ def make_dictionary(a, G, input_d):
 
     # now set our dictionary
     start = time.clock()
-    for i, key in enumerate(paths.keys()):,
+    for i, key in enumerate(paths.keys()):
+        print '    Dictionary: \r',
         try:
             pos = pos_tag([paths[key][0]])[0][1]
 
