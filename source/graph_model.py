@@ -11,6 +11,8 @@ import sys
 import numpy as np
 import threading
 from threading import Thread
+import string
+import unicodedata
 
 def find_sims(model, model_name):
     '''
@@ -252,16 +254,23 @@ def make_dictionary(a, G, input_d):
                                                             weight='weight')
             except:
                 temp = {}
-            for key in temp.keys():
+            tkeys = temp.keys()
+            for key in tkeys:
                 # compare sin^2 similarity length
-                if key not in input_d and len(key) > 2:
+                if clean_woord(key) != key and
+                   clean_word(key) in tkeys:
+                   # skip it, it's pos will throw us off
+                    pass
+                elif clean_word(key) not in input_d and len(key) > 2:
                     try:
                         length = paths[key][1]
                     except:
                         length = 10.0
                     length_n = temp[key]
                     if length > length_n:
-                        paths[key] = (input_d[word][0], temp[key], input_d[word][1])
+                        paths[clean_word(key)] = (input_d[word][0],
+                                      clean_word(temp[key].lower()),
+                                      input_d[word][1])
             if i % 25 == 0:
                 per = 100.0*i/float(len(vocab))
                 print 'Pathfinder({}):  {:.2f}%'.format(a, per)
@@ -277,7 +286,9 @@ def make_dictionary(a, G, input_d):
 
             # i still don't trust the pos tagging
             # if pos == pos_tag([paths[key][0]]):
-            input_d[key] = [paths[key][0], paths[key][2], pos]
+            input_d[key.lower()] = [paths[key][0].lower(),
+                                    paths[key][2].lower(),
+                                    pos]
             if i % 25  == 0:
                 per = 100.0*i/float(len(paths))
         except:
@@ -335,6 +346,20 @@ def set_words(author, lock):
                     pickle.dump(newd, handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
     # lock.release()
+
+def clean_word(word):
+    '''
+    Cleans all the non-ascii stuff
+    '''
+    try:
+        word = unicodedata.normalize('NFKD', word).encode('ascii', 'ignore')
+    except:
+        word = word
+    prt = set(string.printable)
+    word = filter(lambda x: x in prt, word)
+    word = text.encode('utf-8')
+    word = re.sub("\xe2\x80\x93", "-", text)
+    return word.lower()
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
