@@ -275,22 +275,22 @@ def make_dictionary(a, G, input_d):
                                       temp[key],
                                       input_d[word][1])
                     if n % 4 == 0:
-                        print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
+                        print 'Pathfinder({}):  {:.2f}% / \r'.format(a, per),
                     elif n % 3 == 0:
-                        print 'Pathfinder({}):  {:.2f}% \ '.format(a, per),
+                        print 'Pathfinder({}):  {:.2f}% \ \r'.format(a, per),
                     elif n % 2 == 0:
-                        print 'Pathfinder({}):  {:.2f}% -'.format(a, per),
+                        print 'Pathfinder({}):  {:.2f}% - \r'.format(a, per),
                     else:
-                        print 'Pathfinder({}):  {:.2f}% |'.format(a, per),
+                        print 'Pathfinder({}):  {:.2f}% | \r'.format(a, per),
             per = 100.0*i/float(len_vocab)
             if i % 4 == 0:
-                print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
+                print 'Pathfinder({}):  {:.2f}% / \r'.format(a, per),
             elif i % 3 == 0:
-                print 'Pathfinder({}):  {:.2f}% \ '.format(a, per),
+                print 'Pathfinder({}):  {:.2f}% \ \r'.format(a, per),
             elif i % 2 == 0:
-                print 'Pathfinder({}):  {:.2f}% -'.format(a, per),
+                print 'Pathfinder({}):  {:.2f}% - \r'.format(a, per),
             else:
-                print 'Pathfinder({}):  {:.2f}% |'.format(a, per),
+                print 'Pathfinder({}):  {:.2f}% | \r'.format(a, per),
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
         with open('../data/' + a + 'temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
