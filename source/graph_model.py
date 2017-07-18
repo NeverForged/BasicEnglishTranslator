@@ -256,6 +256,7 @@ def make_dictionary(a, G, input_d):
             except:
                 temp = {}
             tkeys = temp.keys()
+            print len(tkeys)
             for key in tkeys:
                 # compare sin^2 similarity length
                 if clean_word(key) != key and clean_word(key) in tkeys:
@@ -271,9 +272,8 @@ def make_dictionary(a, G, input_d):
                         paths[clean_word(key)] = (input_d[word][0],
                                       temp[key],
                                       input_d[word][1])
-            if i % 25 == 0:
-                per = 100.0*i/float(len(vocab))
-                print 'Pathfinder({}):  {:.2f}%'.format(a, per)
+            per = 100.0*i/float(len(vocab))
+            print 'Pathfinder({}):  {:.2f}%'.format(a, per),
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
         with open('../data/' + a + 'temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -291,10 +291,9 @@ def make_dictionary(a, G, input_d):
                                     paths[key][2].lower(),
                                     pos]
         except:
-            print key, paths[key]
-        if i % 25  == 0:
-            per = 100.0*i/float(len(paths))
-            print '    Dictionary: {:.0f}% \r'.format(per),
+            print key, paths[key],
+        per = 100.0*i/float(len(paths))
+        print '    Dictionary: {:.0f}%           \r'.format(per),
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
     if a == 'Basic':
         with open('../data/temp_basic_english.pickle', 'wb') as handle:
