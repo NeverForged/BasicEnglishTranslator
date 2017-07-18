@@ -256,7 +256,6 @@ def make_dictionary(a, G, input_d):
             except:
                 temp = {}
             tkeys = temp.keys()
-            print len(tkeys)
             for key in tkeys:
                 # compare sin^2 similarity length
                 if clean_word(key) != key and clean_word(key) in tkeys:
@@ -273,6 +272,14 @@ def make_dictionary(a, G, input_d):
                                       temp[key],
                                       input_d[word][1])
             per = 100.0*i/float(len(vocab))
+            if i % 4 == 0:
+                print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
+            if i % 3 == 0:
+                print 'Pathfinder({}):  {:.2f}% \'.format(a, per),
+            if i % 2 == 0:
+                print 'Pathfinder({}):  {:.2f}% -'.format(a, per),
+            if i % 2 == 0:
+                print 'Pathfinder({}):  {:.2f}% |'.format(a, per),
             print 'Pathfinder({}):  {:.2f}%'.format(a, per),
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
         with open('../data/' + a + 'temp_paths.pickle', 'wb') as handle:
