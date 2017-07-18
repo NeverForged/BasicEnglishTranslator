@@ -275,7 +275,7 @@ def make_dictionary(a, G, input_d):
             if i % 4 == 0:
                 print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
             if i % 3 == 0:
-                print 'Pathfinder({}):  {:.2f}% \'.format(a, per),
+                print 'Pathfinder({}):  {:.2f}% \ '.format(a, per),
             if i % 2 == 0:
                 print 'Pathfinder({}):  {:.2f}% -'.format(a, per),
             if i % 2 == 0:
