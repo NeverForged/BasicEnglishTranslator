@@ -269,7 +269,7 @@ def make_dictionary(a, G, input_d):
                     length_n = temp[key]
                     if length > length_n:
                         paths[clean_word(key)] = (input_d[word][0],
-                                      clean_word(temp[key].lower()),
+                                      temp[key],
                                       input_d[word][1])
             if i % 25 == 0:
                 per = 100.0*i/float(len(vocab))
