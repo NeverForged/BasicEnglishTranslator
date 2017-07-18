@@ -384,10 +384,6 @@ if __name__ == '__main__':
     threads = []
     for author in lst:
         args = (author, lock)
-        threads.append(Thread(target=set_words, args=args))
-
-    for thread in threads:
-        thread.start()
-
-    for thread in threads:
-        thread.join()
+        a = Thread(target=set_words, args=args))
+        a.start()
+        a.join()
