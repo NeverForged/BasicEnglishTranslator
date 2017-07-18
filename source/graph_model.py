@@ -309,7 +309,8 @@ def set_words(author, lock):
             newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
 
     keys = newd.keys()
-    thed = make_dictionary(a, G, newd) for key in keys:
+    thed = make_dictionary(a, G, newd)
+    for key in keys:
         try:
             alpha = thed[key]
         except:
