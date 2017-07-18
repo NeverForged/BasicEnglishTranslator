@@ -15,8 +15,7 @@ The goal of the Basic English Translator was to take this idea, specifically the
 ## **Data Preparation**
 Given how long *gensim* functions take to run, forcing a user to wait for *gensim* to calculate cosine similarities is not practical.  Instead, I will create a dictionary (in both the pythonic and literal sense of the term) to map English words to words that appear on Ogden's list.  The following flow chart shows this process:
 
-![Flow Chart](/images/data_prep.png)
-Format: ![Blue -> BasicEnglishTranslator.py/graph_model.py Functions, Green -> gensim, Purple -> networkx, red -> nltk]
+![Flow Chart](/images/data_prep.png) Format: ![Blue -> BasicEnglishTranslator.py/graph_model.py Functions, Green -> gensim, Purple -> networkx, red -> nltk]
 
 * **First, find "best" matches for a word:** This is done by taking a *gensim* model (in my case [google news](https://github.com/mmihaltz/word2vec-GoogleNews-vectors/blob/master/GoogleNews-vectors-negative300.bin.gz))...
   * Take each word, and find the top 10 connections (by cosine similarity)
@@ -29,16 +28,15 @@ Format: ![Blue -> BasicEnglishTranslator.py/graph_model.py Functions, Green -> g
 
 ## **Evaluation**
 1. **Checking Basic English Translator:** For this I scraped some articles from both [Simple English Wikipedia](https://simple.wikipedia.org/wiki/Main_Page) and [Standard English Wikipedia](https://en.wikipedia.org/wiki/Main_Page).  I then calculated the complexity of the text, using [Flesch-Kincaid reading levels](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests), and compared the original documents to the translations provided by my model.
-  * ![Flow Chart](/images/flesch-kincaid_graph.png)
-    Format: ![Flesch-Kincaid scores of original document on the x-axis, and the difference between the translated and the original on the y.]
+    * ![Flow Chart](/images/flesch-kincaid_graph.png) Format: ![Flesch-Kincaid scores of original document on the x-axis, and the difference between the translated and the original on the y.]
 
 2. **Look at Actual Text** While not effective to check everything, it does allow for some basic intuition on the text itself.  Example below is the simple Wikipedia article for ["spoon"](https://simple.wikipedia.org/wiki/Spoon):
-  * **Early Model:** *another spoon is another instrument for eating. it is sometimes used for eating foods that are like liquids (like soup and soy), and it might also be used for stirring. humans use spoons every day. spoons are mostly useful for eating liquids, such as soup, though some solids (like tapioca and ice butter) are also sometimes eaten with spoons. another ladle is another kind of serving spoon used for soup, lager, or other foods. there are many different kinds of spoons. there are dessert spoons, soup spoons, baby spoons, teaspoons, thirds and others. there are also spoons that are collector whips and are monopolist another farmer of money. some performers even use two spoons as another musical instrument like another castanet. spoons have been used as computers for eating since paleolithic times. prehistoric peoples probably used shells, or small sheets of wood as spoons. both the testament and latin words for spoon come from the word superposition, which is another spiral-shaped lager shell. the anglo-saxon word spoon, means another sidewalk or spicy of wood.*
+    * **Early Model:** *another spoon is another instrument for eating. it is sometimes used for eating foods that are like liquids (like soup and soy), and it might also be used for stirring. humans use spoons every day. spoons are mostly useful for eating liquids, such as soup, though some solids (like tapioca and ice butter) are also sometimes eaten with spoons. another ladle is another kind of serving spoon used for soup, lager, or other foods. there are many different kinds of spoons. there are dessert spoons, soup spoons, baby spoons, teaspoons, thirds and others. there are also spoons that are collector whips and are monopolist another farmer of money. some performers even use two spoons as another musical instrument like another castanet. spoons have been used as computers for eating since paleolithic times. prehistoric peoples probably used shells, or small sheets of wood as spoons. both the testament and latin words for spoon come from the word superposition, which is another spiral-shaped lager shell. the anglo-saxon word spoon, means another sidewalk or spicy of wood.*
   * **Current Model:** *INSERT NEW MODEL STUFF HERE*
 3. **Look at word associations in a graph** keeping the begining of each path in the final dictionary, I can examine *any* connection made by looking at a simple graph for each word.  The graph highlights the word with a yellow dot for ease of searching, and has three colors: blue words are words from [Ogden's Basic English](http://ogden.basic-english.org/), red words are words that are variations of the basic words, and represent stopping points in the translation, and green words are words that will be replaced...just keep tracing out the path until a red or blue word is hit.
-  * Insert a graph
-  * Insert a graph
-  * Insert a graph
+    * Insert a graph
+    * Insert a graph
+    * Insert a graph
 
 ## **Deployment**
 To use the program, go to [www.BasicEnglishTranslator.com](http://www.basicenglishtranslator.com/).
