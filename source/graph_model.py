@@ -247,7 +247,9 @@ def make_dictionary(a, G, input_d):
     try:
         paths = pickle.load(open('../data/' + a + 'temp_paths.pickle', 'rb'))
     except:
+        print 'Pathfinder - Started'
         paths = defaultdict(list)
+        len_vocab = len(vocab)
         for i, word in enumerate(vocab):
             # temp = dictionary of source -> diction of target -> length
             try:
@@ -271,16 +273,15 @@ def make_dictionary(a, G, input_d):
                         paths[clean_word(key)] = (input_d[word][0],
                                       temp[key],
                                       input_d[word][1])
-            per = 100.0*i/float(len(vocab))
+            per = 100.0*i/float(len_vocab)
             if i % 4 == 0:
                 print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
-            if i % 3 == 0:
+            elif i % 3 == 0:
                 print 'Pathfinder({}):  {:.2f}% \ '.format(a, per),
-            if i % 2 == 0:
+            elif i % 2 == 0:
                 print 'Pathfinder({}):  {:.2f}% -'.format(a, per),
-            if i % 2 == 0:
+            else:
                 print 'Pathfinder({}):  {:.2f}% |'.format(a, per),
-            print 'Pathfinder({}):  {:.2f}%'.format(a, per),
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
         with open('../data/' + a + 'temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -317,18 +318,11 @@ def set_words(author, lock):
     '''
     # lock.acquire()
     # first, need to grab the dictionary of the Author...
+    print 'Set Words started'
     a = author.encode('ascii', 'replace')
     a = a.lower().strip().replace(' ','_')
     missing = 0
-    if author == 'Basic':
-        newd = pickle.load(open('../data/basic_english - Copy.pickle', 'rb'))
-    else:
-        try:
-            newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
-        except:
-            Author(author)
-            newd = pickle.load(open('../authors/' + a + '_words', 'rb'))
-
+    newd = pickle.load(open('../data/basic_english - Copy.pickle', 'rb'))
     keys = newd.keys()
     thed = make_dictionary(a, G, newd)
     for key in keys:
@@ -341,17 +335,9 @@ def set_words(author, lock):
 
     # save it...
     if missing == 0:
-        if author == 'Basic':
-            with open('../data/basic_english.pickle', 'wb') as handle:
-                    pickle.dump(thed, handle,
-                                protocol=pickle.HIGHEST_PROTOCOL)
-        else:
-            with open('../authors/' + a +'_words', 'wb') as handle:
-                    pickle.dump(thed, handle,
-                                protocol=pickle.HIGHEST_PROTOCOL)
-            with open('../authors/' + a +'_words_og', 'wb') as handle:
-                    pickle.dump(newd, handle,
-                                protocol=pickle.HIGHEST_PROTOCOL)
+        with open('../data/basic_english.pickle', 'wb') as handle:
+                pickle.dump(thed, handle,
+                            protocol=pickle.HIGHEST_PROTOCOL)
     # lock.release()
 
 def clean_word(word):
