@@ -4,8 +4,6 @@ import nltk.data
 from nltk import pos_tag, word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
-from gensim.models import Word2Vec
-import gensim as gensim
 import string
 import re
 import time
@@ -23,8 +21,6 @@ class BasicEnglishTranslator():
     overall goals of the ghost-writer.click project.
 
     PARAMETERS
-    model: A word2vec model to use to search for associated words for new
-        words encountered.  In command-line load, defaults to google-news.
     basic_dictionary: an input dictionary specified at instantiation, intent
         is a saved dictionary in training.  If none, loads a dictionary from a
         pickle file.  If this doesn't exist, creates one from a csv of Ogden's
@@ -32,7 +28,6 @@ class BasicEnglishTranslator():
         Dictionary is of format {'words':['words', 'word']} Where key is word
         in document, [0] is word to replace with, and [1] is where that
         connection was made in the first place.
-    threshold: a number of iterations when looking for a new word
 
     ATTRIBUTES
     real_text: the actual text to translate, entered with fit() method
@@ -46,18 +41,14 @@ class BasicEnglishTranslator():
     fit(input_text): Main function, builds the various lists and texts off
         of the input_text (string)
     '''
-    def __init__(self, model, basic_dictionary=None,
-                 threshold=1, verbose=False):
+    def __init__(self, basic_dictionary=None, verbose=False):
         '''
         Initializer.
         '''
-        # model
-        self.model = model
         # Dictionary
         # check valid dictionary
-        self.class_dictionary = pickle.load(open('../data/basic_english.pickle',"rb"))
-        # Threshold
-        self.threshold = threshold
+        d_name = '../data/basic_english.pickle'
+        self.class_dictionary = pickle.load(open(d_name, "rb"))
         self.save_dictionary = self.class_dictionary.copy()
         self.verbose = verbose
 
@@ -71,7 +62,6 @@ class BasicEnglishTranslator():
         Input: String
         '''
         self.real_text = input_text
-        threshold = self.threshold
         done = 0
         # timer...
         start = time.clock()
@@ -163,7 +153,6 @@ class BasicEnglishTranslator():
                     # t = threading.Thread(target=self.find_word, args=argu)
                     # t.daemon = True
                     # t.start()
-                    abc = self.find_word(clean, word[0], word[1])
         end = time.clock()
         if self.verbose:
             print 'Time: {:.4f}s'.format(end-start)
@@ -177,72 +166,6 @@ class BasicEnglishTranslator():
                                 handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
 
-    def find_word(self, clean, wrd, prt):
-        '''
-        If a word is not in the dictionary, this looks for the word given the
-        most simmilar word(s) in the model loaded, determines if the simmilar
-        word has been mapped already, and inserts it into the model.
-        Looks for most similar word to that word in the model, then makes a
-        length-threshold list of words most similar to the word before.
-        Checks if these words were mapped, POS dependent.  if so, makes the
-        same mapping.
-        '''
-        lst_ret = [clean]
-        # try: # in case it fails...
-        lst = []
-        try:
-            lst = [a[0] for a in self.model.wv.most_similar(wrd)]
-        except KeyError as e:
-            if self.verbose:
-                print str(e)
-        if len(lst) >= 1:
-            for i in xrange(self.threshold):
-                c = self.model.wv.most_similar(lst[i], topn=self.threshold)
-                for d in c:
-                    lst.append(d[0])
-        lst = list(set(lst))
-        # collect only those words in the dictionary...
-        #    ...and order by simalarity
-        lst = [(self.clean_word(a), self.model.similarity(wrd, a)) for a in lst
-               if self.clean_word(a) in self.save_dictionary]
-        lst = sorted(lst, key=lambda x: -x[1])
-        # lst in order
-        # also, everything was mapping to 'i' for some reason...
-        lst = [a[0] for a in lst if len(a[0]) > 1]
-        n = 0
-        done = 0
-        # since we ordered by similarity, best go first
-        for item in lst:
-            # must match w/part of speach...
-            if done == 0:
-                b = pos_tag([item])[0][1]
-                lst_ret.append(item)
-                if b == prt:
-                    # add to dictionary...based on what's there,
-                    # retaining grouping info
-                    done = 1
-                    tmp = self.class_dictionary[item][0]
-                    self.class_dictionary[clean] = [tmp, item, prt]
-                    # add to lst...at the idx that cllaed it
-                    idx = len(self.lst_ret) - 1
-                    self.lst_ret[idx] = self.retain_capitalization(
-                        self.class_dictionary[item][0], wrd)
-                    if len(tmp) > 1 and len(item) > 1:
-                        self.save_dictionary[clean] = [tmp, item, prt]
-                    lst_ret.append('*added: {}, {}*'.format(tmp, item))
-            if done == 0:
-                cln = clean.lower()
-                a = pos_tag([cln])[0][1]
-                self.class_dictionary[clean] = [cln, cln, a]
-                lst_ret.append(
-                    self.retain_capitalization(
-                        self.class_dictionary[clean][0], wrd))
-        # except:
-        #     lst_ret.append('ERRORED OUT')
-        #     self.class_dictionary[clean] = [clean, None, prt]
-        if self.verbose:
-            print lst_ret
-        return lst_ret
 
     def retain_capitalization(self, new_word, original_word):
         '''
@@ -322,14 +245,6 @@ class BasicEnglishTranslator():
 
 if __name__ == '__main__':
     start = time.clock()
-    # b = '../model/300features_5min_word_count_10context.npy'
-    b = '../model/GoogleNews-vectors-negative300.bin'
-    try:
-        model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
-    except:
-        model = gensim.models.Word2Vec.load(b)
-    model.init_sims(replace=True)
-    print "This took only {:.3f}s".format(time.clock()-start)
     try:
         wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
         # articles = pickle.load(open('../data/articles_en.pickle', 'rb'))
@@ -347,24 +262,31 @@ if __name__ == '__main__':
             articles = {}
         # check if it's been done before...
         if item not in articles:
-            start = time.clock()
-            # we'll lose capitalization, but whatever...
             wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
-            MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-            del wiki
-            del articles
-            translator = BasicEnglishTranslator(model, threshold=1)
-            translator.fit(MyText)
-            try:
-                articles = pickle.load(open('../data/articles.pickle', 'rb'))
-            except:
+            if ((['may', 'refer', 'to:'] not in wiki[item][0]) and
+               (wiki[item] != ['wikipedia', 'does', 'not', 'yet', 'have', 'an',
+                               'article', 'with', 'this', 'name.'])):
+                start = time.clock()
+                # we'll lose capitalization, but whatever...
+                MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
+                del wiki
+                del articles
+                translator = BasicEnglishTranslator()
+                translator.fit(MyText)
+                try:
+                    articles = pickle.load(open('../data/articles.pickle',
+                                                'rb'))
+                except:
+                    articles = {}
+                articles[item] = [translator.basic_text,
+                                  translator.basic_list,
+                                  translator.real_text,
+                                  translator.real_list]
+                with open('../data/articles.pickle', 'wb') as handle:
+                    pickle.dump(articles, handle,
+                    protocol=pickle.HIGHEST_PROTOCOL)
                 articles = {}
-            articles[item] = [translator.basic_text, translator.basic_list,
-                              translator.real_text, translator.real_list]
-            with open('../data/articles.pickle', 'wb') as handle:
-                pickle.dump(articles, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            articles = {}
-            end = time.clock() - start
-            dic = translator.save_dictionary
-            print "{} of {} - {}: {:.2f}s ({})".format(i, abc,
-                                                       item, end, len(dic))
+                end = time.clock() - start
+                dic = translator.save_dictionary
+                print "{} of {} - {}: {:.2f}s ({})".format(i, abc,
+                                                           item, end, len(dic))
