@@ -258,7 +258,7 @@ def make_dictionary(a, G, input_d):
             except:
                 temp = {}
             tkeys = temp.keys()
-            for key in tkeys:
+            for n, key in enumerate(tkeys):
                 # compare sin^2 similarity length
                 if clean_word(key) != key and clean_word(key) in tkeys:
                    # skip it, it's pos will throw us off
@@ -273,6 +273,14 @@ def make_dictionary(a, G, input_d):
                         paths[clean_word(key)] = (input_d[word][0],
                                       temp[key],
                                       input_d[word][1])
+                    if n % 4 == 0:
+                        print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
+                    elif n % 3 == 0:
+                        print 'Pathfinder({}):  {:.2f}% \ '.format(a, per),
+                    elif n % 2 == 0:
+                        print 'Pathfinder({}):  {:.2f}% -'.format(a, per),
+                    else:
+                        print 'Pathfinder({}):  {:.2f}% |'.format(a, per),
             per = 100.0*i/float(len_vocab)
             if i % 4 == 0:
                 print 'Pathfinder({}):  {:.2f}% /'.format(a, per),
