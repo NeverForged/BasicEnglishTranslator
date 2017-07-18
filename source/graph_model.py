@@ -353,14 +353,8 @@ def clean_word(word):
     '''
     Cleans all the non-ascii stuff
     '''
-    try:
-        word = unicodedata.normalize('NFKD', word).encode('ascii', 'ignore')
-    except:
-        word = word
     prt = set(string.printable)
     word = filter(lambda x: x in prt, word)
-    word = word.encode('utf-8')
-    word = re.sub("\xe2\x80\x93", "-", word)
     return word.lower()
 
 if __name__ == '__main__':
