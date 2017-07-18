@@ -257,7 +257,7 @@ def make_dictionary(a, G, input_d):
             tkeys = temp.keys()
             for key in tkeys:
                 # compare sin^2 similarity length
-                if clean_woord(key) != key and clean_word(key) in tkeys:
+                if clean_word(key) != key and clean_word(key) in tkeys:
                    # skip it, it's pos will throw us off
                     pass
                 elif clean_word(key) not in input_d and len(key) > 2:
