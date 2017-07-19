@@ -243,7 +243,8 @@ def make_dictionary(a, G, input_d):
     vocab.sort()
     vocab.sort(key=len, reverse=True)
     df = pd.read_csv('../data/basic_english_wordlist.csv', header=0)
-    lst = list(df['WORD'])
+    temp = df['WORD']
+    lst = list(temp)
     lst.sort(key=len, reverse=True)
     vocab = vocab + lst
     start = time.clock()
