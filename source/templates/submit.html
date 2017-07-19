@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Basic English Translator</title>
+<style>
+		* { margin: 0; padding: 0; }
+		html {
+			background: url(static/images/flag.jpg) no-repeat center center fixed;
+			-webkit-background-size: cover;
+			-moz-background-size: cover;
+			-o-background-size: cover;
+			background-size: cover;
+		}
+
+</style>
+</head>
+<body>
+<style>
+* { margin: 0; padding: 0; }
+body {
+  padding-top: 50px;
+  background: url(static/images/white.png) no-repeat center center fixed;
+  background-size: 50% 89%;
+  color: dimgrey;
+}
+
+#page-wrap { width: 400px; margin: 50px auto; padding: 20px; background: white; -moz-box-shadow: 0 0 20px black; -webkit-box-shadow: 0 0 20px black; box-shadow: 0 0 20px black; }
+p { font: 15px/2 Georgia, Serif; margin: 0 0 30px 0; text-indent: 40px; max-width: 400px;}
+
+
+#container {
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;         /* Opera/IE 8+ */
+
+    /* Since this element now uses border-box sizing, the 10px of horizontal
+       padding will be drawn inside the 80% width */
+    width: 48%;
+    padding: 0 10px;
+    font-family: "Verdana", Arial, sans-serif;
+}
+
+#text_input {
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;         /* Opera/IE 8+ */
+
+    /* Since this element now uses border-box sizing, the 10px of horizontal
+       padding will be drawn inside the 80% width */
+    width: 48%;
+    padding: 0 10px;
+    font-family: "Verdana", Arial, sans-serif;
+}
+
+h1{
+	font-family: "Georgia", Arial, sans-serif;
+}
+</style>
+  <div id="page_wrap">
+    <!-- page content -->
+        <h1><center>Basic English Translator</center></h1>
+        <div>
+          <center>
+            <i><p><div id="container"><span id="answer"></span></div></p></i></div>
+          </center>
+            <p><center>Enter text below:</center>
+            <center><textarea id="text_input"></textarea></center>
+        </div>
+        <div>
+          <center><button id='process' type="button">Make Basic</button></center>
+        </div>
+    </div>
+
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+
+
+      $("button#process").click(function() {
+              console.log("clicked")
+              let my_text = get_input()
+              send_text_json(my_text)
+          })
+    }) //End .ready(function
+
+      let display_prediction = function(answer) {
+        $("span#answer").html(answer["Classification"])
+      }
+
+      let get_input = function() {
+        console.log("input - start")
+        let text_input = $("textarea#text_input").val()
+        return {'text_input': text_input}
+        }
+
+      let send_text_json = function(my_text) {
+          console.log("send_text - start")
+          console.log(my_text)
+          $.ajax({
+              url: '/process',
+              contentType: "application/json; charset=utf-8",
+              type: 'POST',
+              success: function (my_text) {
+                  console.log(my_text)
+                  display_prediction(my_text)
+              },
+              data: JSON.stringify(my_text)
+          })}
+  </script>
+    </body>
+</html>
