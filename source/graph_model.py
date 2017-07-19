@@ -242,7 +242,7 @@ def make_dictionary(a, G, input_d):
     vocab = input_d.keys()
     vocab.sort()
     vocab.sort(key=len, reverse=True)
-    df = pd.read_csv('../data/basic_english_wordlist.csv')
+    df = pd.read_csv('../data/basic_english_wordlist.csv', header=0)
     lst = list(df['WORD'])
     lst.sort(key=len, reverse=True)
     vocab = vocab + lst
