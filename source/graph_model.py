@@ -278,9 +278,7 @@ def make_dictionary(a, G, input_d):
                         length = 10.0
                     length_n = temp[key]
                     if length > length_n:
-                        _, p = nx.single_source_dijkstra_path_length(G, key,
-                                                                     word)
-
+                        _, p = nx.nx.single_source_dijkstra(G, key, word)
                         paths[clean_word(key)] = (word, temp[key], p[1])
 
                     if n % 4 == 0:
