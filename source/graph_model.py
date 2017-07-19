@@ -375,8 +375,10 @@ if __name__ == '__main__':
     #     model = get_sentence_model()
     d = get_sims('test', model)
     G, d = make_graph_model(d)
-    with open('../data/graph.pickle', 'wb') as handle:
-        pickle.dump(G, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    lst = [a for a in nx.connected_components(G)]
+    for i, a in enumerate(nx.connected_components(G))
+        with open('../data/graph_' + str(i) + '.pickle', 'wb') as handle:
+            pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
     #
     # # del model
     # lock = threading.Lock()
