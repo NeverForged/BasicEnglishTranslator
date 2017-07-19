@@ -279,9 +279,7 @@ def make_dictionary(a, G, input_d):
                     length_n = temp[key]
                     if length > length_n:
                         _, p = nx.single_source_dijkstra_path_length(G, key,
-                                                                     word,
-                                                                     5,
-                                                                     'weight')
+                                                                     word)
 
                         paths[clean_word(key)] = (word, temp[key], p[1])
 
@@ -369,9 +367,7 @@ def clean_word(word):
     return word.lower()
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        if sys.argv[1].lower() == 'google':
-            model = get_google()
+    model = get_google()
     # else:
     #     model = get_sentence_model()
     d = get_sims('test', model)
