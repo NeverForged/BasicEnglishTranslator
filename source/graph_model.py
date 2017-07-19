@@ -375,14 +375,16 @@ if __name__ == '__main__':
     #     model = get_sentence_model()
     d = get_sims('test', model)
     G, d = make_graph_model(d)
+    with open('../data/graph.pickle', 'wb') as handle:
+        pickle.dump(G, handle, protocol=pickle.HIGHEST_PROTOCOL)
     #
-    # del model
-    lock = threading.Lock()
-    lst = ['Basic']
-    # lets do this...
-    threads = []
-    for author in lst:
-        args = (author, lock)
-        a = Thread(target=set_words, args=args)
-        a.start()
-        a.join()
+    # # del model
+    # lock = threading.Lock()
+    # lst = ['Basic']
+    # # lets do this...
+    # threads = []
+    # for author in lst:
+    #     args = (author, lock)
+    #     a = Thread(target=set_words, args=args)
+    #     a.start()
+    #     a.join()
