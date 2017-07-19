@@ -278,9 +278,13 @@ def make_dictionary(a, G, input_d):
                         length = 10.0
                     length_n = temp[key]
                     if length > length_n:
-                        paths[clean_word(key)] = (input_d[word][0],
-                                      temp[key],
-                                      input_d[word][1])
+                        _, p = nx.single_source_dijkstra_path_length(G, key,
+                                                                     word,
+                                                                     5,
+                                                                     'weight')
+
+                        paths[clean_word(key)] = (word, temp[key], p[1])
+
                     if n % 4 == 0:
                         print 'Pathfinder({}):  {:.2f}% / \r'.format(a, per),
                     elif n % 3 == 0:
