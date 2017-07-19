@@ -157,10 +157,7 @@ class BasicEnglishTranslator():
         txt = re.sub("\xe2\x80\x93", "-", txt)
         self.basic_list = self.lst_ret
         self.basic_text = txt
-        with open('../data/basic_english.pickle', 'wb') as handle:
-                    pickle.dump(self.save_dictionary,
-                                handle,
-                                protocol=pickle.HIGHEST_PROTOCOL)
+        return txt
 
 
     def retain_capitalization(self, new_word, original_word):
@@ -249,9 +246,10 @@ if __name__ == '__main__':
     keys = wiki.keys()
     abc = len(keys)
     keys.sort()
-    keys = keys[::-1]
     del wiki
+    translator = BasicEnglishTranslator()
     for i, item in enumerate(keys):
+        start = time.clock()
         try:
             articles = pickle.load(open('../data/articles.pickle', 'rb'))
         except:
@@ -259,30 +257,32 @@ if __name__ == '__main__':
         # check if it's been done before...
         if item not in articles:
             wiki = pickle.load(open('../data/wikipedia.pickle', 'rb'))
-            if ((['may', 'refer', 'to:'] not in wiki[item][0]) and
-               (wiki[item] != ['wikipedia', 'does', 'not', 'yet', 'have', 'an',
-                               'article', 'with', 'this', 'name.'])):
-                start = time.clock()
-                # we'll lose capitalization, but whatever...
-                MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
-                del wiki
-                del articles
-                translator = BasicEnglishTranslator()
-                translator.fit(MyText)
-                try:
-                    articles = pickle.load(open('../data/articles.pickle',
-                                                'rb'))
-                except:
+            try:
+                if len(wiki[item]) >= 2:
+                    start = time.clock()
+                    # we'll lose capitalization, but whatever...
+                    MyText = ' '.join([' '.join(sntc) for sntc in wiki[item]])
+                    del wiki
+                    del articles
+                    translator.fit(MyText)
+                    try:
+                        articles = pickle.load(open('../data/articles.pickle',
+                                                    'rb'))
+                    except:
+                        articles = {}
+                    articles[item] = [translator.basic_text,
+                                      translator.basic_list,
+                                      translator.real_text,
+                                      translator.real_list]
+                    with open('../data/articles.pickle', 'wb') as handle:
+                        pickle.dump(articles, handle,
+                        protocol=pickle.HIGHEST_PROTOCOL)
                     articles = {}
-                articles[item] = [translator.basic_text,
-                                  translator.basic_list,
-                                  translator.real_text,
-                                  translator.real_list]
-                with open('../data/articles.pickle', 'wb') as handle:
-                    pickle.dump(articles, handle,
-                    protocol=pickle.HIGHEST_PROTOCOL)
-                articles = {}
-                end = time.clock() - start
-                dic = translator.save_dictionary
-                print "{} of {} - {}: {:.2f}s ({})".format(i, abc,
-                                                           item, end, len(dic))
+                    end = time.clock() - start
+                    dic = translator.save_dictionary
+                    print "{} of {} - {}: {:.2f}s ({})".format(i, abc, item,
+                                                               end, len(dic))
+            except:
+                pass
+        end = time.clock() - start
+        dic = translator.save_dictionary
