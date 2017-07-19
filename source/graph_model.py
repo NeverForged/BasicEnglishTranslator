@@ -262,7 +262,7 @@ def make_dictionary(a, G, input_d):
             try:
                 temp = nx.single_source_dijkstra_path_length(G, word,
                                                             weight='weight',
-                                                            cutoff=7)
+                                                            cutoff=5)
             except:
                 temp = {}
             tkeys = temp.keys()
