@@ -375,8 +375,8 @@ if __name__ == '__main__':
     #     model = get_sentence_model()
     d = get_sims('test', model)
     G, d = make_graph_model(d)
-    lst = [a for a in nx.connected_components(G)]
     for i, a in enumerate(nx.connected_components(G))
+        print "Saving Graph {}".format(i)
         with open('../data/graph_' + str(i) + '.pickle', 'wb') as handle:
             pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
     #
