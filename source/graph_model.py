@@ -14,6 +14,7 @@ from threading import Thread
 import string
 import unicodedata
 import re
+import pandas as pd
 
 def find_sims(model, model_name):
     '''
@@ -241,6 +242,10 @@ def make_dictionary(a, G, input_d):
     vocab = input_d.keys()
     vocab.sort()
     vocab.sort(key=len, reverse=True)
+    df = pd.read_csv('../data/basic_english_wordlist.csv')
+    lst = list(df['WORD'])
+    lst.sort(key=len, reverse=True)
+    vocab = vocab + lst
     start = time.clock()
     # make a dictionary...
     # temp = nx.all_pairs_dijkstra_path_length(G, cutoff=10, weight='weight')
@@ -256,7 +261,7 @@ def make_dictionary(a, G, input_d):
             try:
                 temp = nx.single_source_dijkstra_path_length(G, word,
                                                             weight='weight',
-                                                            cutoff=5)
+                                                            cutoff=len(word))
             except:
                 temp = {}
             tkeys = temp.keys()
