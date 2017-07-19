@@ -130,7 +130,7 @@ class BasicEnglishTranslator():
         count_replacements = 0
         self.lst_ret = []
         for idx, word in enumerate(words):
-            if word[1] in pass_thru:
+            if word[1] in pass_thru or len(word[0]) <= 1:
                 # put it in and move on... it's proper or whatever
                 self.lst_ret.append(word[0])
             else:
