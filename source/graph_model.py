@@ -278,9 +278,8 @@ def make_dictionary(a, G, input_d):
                         length = 10.0
                     length_n = temp[key]
                     if length > length_n:
-                        _, p = nx.nx.single_source_dijkstra(G, key, word)
-                        paths[clean_word(key)] = (word, temp[key], p[word][1])
-
+                        # _, p = nx.nx.single_source_dijkstra(G, key, word)
+                        paths[clean_word(key)] = (word, temp[key])
                     if n % 4 == 0:
                         print 'Pathfinder({}):  {:.2f}% / \r'.format(a, per),
                     elif n % 3 == 0:
@@ -308,12 +307,18 @@ def make_dictionary(a, G, input_d):
         print '    Dictionary: \r',
         try:
             pos = pos_tag([paths[key][0]])[0][1]
+            _, p = nx.nx.single_source_dijkstra(G, key, paths[key][0])
 
             # i still don't trust the pos tagging
             # if pos == pos_tag([paths[key][0]]):
-            input_d[key.lower()] = [paths[key][0].lower(),
-                                    paths[key][2].lower(),
-                                    pos]
+            try:
+                input_d[key.lower()] = [paths[key][0].lower(),
+                                        p[paths[key][0]][1].lower(),
+                                        pos]
+            except:
+                input_d[key.lower()] = [paths[key][0].lower(),
+                                        paths[key][0].lower(),
+                                        pos]
         except:
             print key, paths[key],
         per = 100.0*i/float(len(paths))
