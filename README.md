@@ -49,4 +49,4 @@ Given how long *gensim* functions take to run, forcing a user to wait for *gensi
 3. -[ ] **Use a more "American" word list/theory** since Charles K Ogden was British, you may notice that *pants* are replaced with *trousers*; finding a different model to use based on research done in the US for English Language Learner populations may make for a more useful model, at least for American ELL students.
 
 ## **Deployment**
-To use the program, go to [www.BasicEnglishTranslator.com](http://www.basicenglishtranslator.com/).
+To use the program, go to [www.BasicEnglishTranslator.com](http://www.basicenglishtranslator.com/).  This was made with Flask and runs off of an ec2 with nginx.  The flag artwork was taken from a creative commons site and was made by [Nicolas Raymond](http://freestock.ca/flags_maps_g80-english_language_grunge_flag_p1173.html).
