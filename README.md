@@ -26,7 +26,7 @@ Given how long *gensim* functions take to run, forcing a user to wait for *gensi
 * **Make a dictionary** that stores this information, save in a cPickle file so we can access it whenever we need to translate text.
 
 ## **Evaluation**
-<section id="graphic_2" markdown="1"><img align="right" src="/images/flesch-kincaid_graph.png" alt="Flesch-Kincaid scores of original document on the x-axis, and the difference between the translated and the original on the y.", height=100, width=100></section>
+<section id="graphic_2" markdown="1"><img align="right" src="/images/flesch-kincaid_graph.png" alt="Flesch-Kincaid scores of original document on the x-axis, and the difference between the translated and the original on the y.", height=500, width=500></section>
 
 1. **Checking Basic English Translator:** For this I scraped some articles from both [Simple English Wikipedia](https://simple.wikipedia.org/wiki/Main_Page) and [Standard English Wikipedia](https://en.wikipedia.org/wiki/Main_Page).  I then calculated the complexity of the text, using [Flesch-Kincaid reading levels](https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests), and compared the original documents to the translations provided by my model.
     * Already Simple text was reduced in complexity by an average of 0.16 grade levels.
