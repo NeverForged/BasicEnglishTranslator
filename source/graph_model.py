@@ -221,8 +221,16 @@ def make_graph_model(d):
     lines = []
     G=nx.Graph()
     for key in d.keys():
+        G.add_edge(key.lower(), key.lower(), weight=0.0)
         for item in d[key]:
-            G.add_edge(item[0], key, weight=item[1])
+            # check that word works before adding to model
+            if len(item[0]) > 1 and len(key) > 1: # avoid 'i'
+                try:
+                    # avoid spanish words
+                    s = '{} {}'.format(item[0], key)
+                    G.add_edge(item[0].lower(), key.lower(), weight=item[1])
+                except:
+                    pass
     print 'G took {:.2f}s'.format(time.clock() - start)
     return G, d
 
@@ -323,13 +331,20 @@ def make_dictionary(a, G, input_d):
             print key, paths[key],
         per = 100.0*i/float(len(paths))
         print '    Dictionary: {:.0f}%           \r'.format(per),
+
+    # make sure BE words track to self...
+    df = pd.read_csv('../data/basic_english_wordlist.csv')
+    lst = list(df['WORD'])
+    for item in lst:
+        try:
+            d[item.lower()][0] = item.lower()
+        except:
+            pass
+    with open('../data/basic_english.pickle', 'wb') as handle:
+            pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
-    if a == 'Basic':
-        with open('../data/temp_basic_english.pickle', 'wb') as handle:
-                pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    else:
-        with open('../data/temp_' + a + '.pickle', 'wb') as handle:
-                pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open('../data/temp_basic_english.pickle', 'wb') as handle:
+            pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return input_d
 
 
@@ -352,8 +367,6 @@ def set_words(author, lock):
         except:
             missing += 1
     print '{} missing {} entries'.format(author, missing)
-
-
     # save it...
     if missing == 0:
         with open('../data/basic_english.pickle', 'wb') as handle:
@@ -379,14 +392,3 @@ if __name__ == '__main__':
         print "Saving Graph {}".format(i)
         with open('../data/graph_' + str(i) + '.pickle', 'wb') as handle:
             pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    #
-    # # del model
-    # lock = threading.Lock()
-    # lst = ['Basic']
-    # # lets do this...
-    # threads = []
-    # for author in lst:
-    #     args = (author, lock)
-    #     a = Thread(target=set_words, args=args)
-    #     a.start()
-    #     a.join()
