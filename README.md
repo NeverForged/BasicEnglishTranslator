@@ -5,7 +5,7 @@ According to [http://ogden.basic-english.org/](http://ogden.basic-english.org/):
 The goal of the Basic English Translator was to take this idea, specifically the [850 words](http://ogden.basic-english.org/words.html) proposed by **Charles K. Ogden** in the 1930s, each of the [international and supplementary words](http://ogden.basic-english.org/intlword.html) needed for various industries, and the [next steps words](http://ogden.basic-english.org/intlword.html) that English speakers should know, and simplify a given block of text to these words.
 
 ### **Research Question**
-*Can we use Word-to-vector (gensim), parts of speech tagging (from nltk), and graph theory (networkx) to convert a block of text into Basic english?
+*How can natural language processing be used to translate a block a text into a simpler block of (Basic English) text?
 
 ## **Data Understanding**
 * **Basic/Simple English:** There are versions of 'Simple' or 'basic' English, [Charles K Ogden](http://ogden.basic-english.org/)’s 850 words being the most common.  [Simple English Wikipedia](https://simple.wikipedia.org/wiki/Simple_English_Wikipedia) being another (with a broader vocabulary).
