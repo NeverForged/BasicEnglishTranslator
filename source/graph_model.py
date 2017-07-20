@@ -32,6 +32,7 @@ def find_sims(model, model_name):
     try:
         ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle', 'rb'))
     except:
+        ret = {}
         # list of parts of speech to simplify
         make_simple = ['CC',  # CC: conjunction, coordinating
                        'DT',  # DT: determiner
