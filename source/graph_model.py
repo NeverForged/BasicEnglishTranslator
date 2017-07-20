@@ -31,8 +31,7 @@ def find_sims(model, model_name):
     lock = threading.Lock()
     # try:
     ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle', 'rb'))
-    # except:
-    #     ret = defaultdict(list)
+    # list of parts of speech to simplify
     make_simple = ['CC',  # CC: conjunction, coordinating
                    'DT',  # DT: determiner
                    'IN',  # IN: preposition or conjunction, subordinating
