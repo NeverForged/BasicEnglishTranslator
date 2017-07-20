@@ -29,70 +29,71 @@ def find_sims(model, model_name):
     '''
     # lock to protect dictionary...
     lock = threading.Lock()
-    # try:
-    ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle', 'rb'))
-    # list of parts of speech to simplify
-    make_simple = ['CC',  # CC: conjunction, coordinating
-                   'DT',  # DT: determiner
-                   'IN',  # IN: preposition or conjunction, subordinating
-                   'JJR',  # JJR: adjective, comparative
-                   'JJS',  # JJR: adjective, comparative
-                   'MD',  # MD: modal auxiliary
-                   'NN',  # NN: noun, common, singular or mass
-                   'NNS',  # NNS: noun, common, plural
-                   'PDT',  # PDT: pre-determiner
-                   'PDT',  # PDT: pre-determiner
-                   'PRP$',  # PRP$: pronoun, possessive
-                   'RB',  # RB: adverb
-                   'RBR',  # RBR: adverb, comparative
-                   'RBS',  # RBS: adverb, superlative
-                   'RP',  # RP: particle
-                   'UH',  # UH: interjection
-                   'VB',  # VB: verb, base form
-                   'VBD',  # VBD: verb, past tense
-                   'VBG',  # VBG: verb, present participle or gerund
-                   'VBN',  # VBN: verb, past participle
-                   'VBP',  # VBP: verb, present tense, not 3rd person sing
-                   'VBZ',  # VBZ: verb, present tense, 3rd person singular
-                   'WDT',  # WDT: WH-determiner
-                   'WP',  # WP: WH-pronoun
-                   'WP$',  # WP$: WH-pronoun, possessive
-                   'WRB'  # WRB: Wh-adverb
-                   ]
-    start = time.clock()
+    try:
+        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle', 'rb'))
+    except:
+        # list of parts of speech to simplify
+        make_simple = ['CC',  # CC: conjunction, coordinating
+                       'DT',  # DT: determiner
+                       'IN',  # IN: preposition or conjunction, subordinating
+                       'JJR',  # JJR: adjective, comparative
+                       'JJS',  # JJR: adjective, comparative
+                       'MD',  # MD: modal auxiliary
+                       'NN',  # NN: noun, common, singular or mass
+                       'NNS',  # NNS: noun, common, plural
+                       'PDT',  # PDT: pre-determiner
+                       'PDT',  # PDT: pre-determiner
+                       'PRP$',  # PRP$: pronoun, possessive
+                       'RB',  # RB: adverb
+                       'RBR',  # RBR: adverb, comparative
+                       'RBS',  # RBS: adverb, superlative
+                       'RP',  # RP: particle
+                       'UH',  # UH: interjection
+                       'VB',  # VB: verb, base form
+                       'VBD',  # VBD: verb, past tense
+                       'VBG',  # VBG: verb, present participle or gerund
+                       'VBN',  # VBN: verb, past participle
+                       'VBP',  # VBP: verb, present tense, not 3rd person sing
+                       'VBZ',  # VBZ: verb, present tense, 3rd person singular
+                       'WDT',  # WDT: WH-determiner
+                       'WP',  # WP: WH-pronoun
+                       'WP$',  # WP$: WH-pronoun, possessive
+                       'WRB'  # WRB: Wh-adverb
+                       ]
+        start = time.clock()
 
-    ylst = list('?!12345678"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c')
-    keys_length = float(len(model.vocab.keys()))
-    for i, word in enumerate(model.vocab.keys()):
-        if word not in ret:
-            if any(x in ylst for x in word):
-                # weird one with punctuation, or a phrase
-                # 100.0 ensures it won't show up later, but will not waste
-                #  time in that list comprehension
-                ret[word] = [(word, 100.0)]
-            else:
-                # only use the ones I want to replace
-                args = (word, ret, model, make_simple,
-                        lock, ylst, i, model_name)
-                a = Thread(target=thread_word_search, args=args)
-                a.start()
-                a.join()
-        if i % 5 == 0:
-            per = 100.0 * i/keys_length
-            if i % 20 == 0:
-                print 'Get Connections {:.2f}% \  \r'.format(per),
-            elif i % 15 == 0:
-                print 'Get Connections {:.2f}% |  \r'.format(per),
-            elif i % 10 == 0:
-                print 'Get Connections {:.2f}% /  \r'.format(per),
-            else:
-                print 'Get Connections {:.2f}% -  \r'.format(per),
-    end = time.clock()
-    print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
-    args = (model_name + '_sim_dict.pickle', ret, lock)
-    a = Thread(target=save_to_pickle, args=args)
-    a.start()
-    a.join()
+        ylst = list('?!12345678"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c')
+        keys_length = float(len(model.vocab.keys()))
+        for i, word in enumerate(model.vocab.keys()):
+            if word not in ret:
+                if any(x in ylst for x in word):
+                    # weird one with punctuation, or a phrase
+                    # 100.0 ensures it won't show up later, but will not waste
+                    #  time in that list comprehension
+                    ret[word] = [(word, 100.0)]
+                else:
+                    # only use the ones I want to replace
+                    args = (word, ret, model, make_simple,
+                            lock, ylst, i, model_name)
+                    a = Thread(target=thread_word_search, args=args)
+                    a.start()
+                    a.join()
+            if i % 5 == 0:
+                per = 100.0 * i/keys_length
+                if i % 20 == 0:
+                    print 'Get Connections {:.2f}% \  \r'.format(per),
+                elif i % 15 == 0:
+                    print 'Get Connections {:.2f}% |  \r'.format(per),
+                elif i % 10 == 0:
+                    print 'Get Connections {:.2f}% /  \r'.format(per),
+                else:
+                    print 'Get Connections {:.2f}% -  \r'.format(per),
+        end = time.clock()
+        print 'Dictionary took {:.2f}s'.format((end - start)/60.0)
+        args = (model_name + '_sim_dict.pickle', ret, lock)
+        a = Thread(target=save_to_pickle, args=args)
+        a.start()
+        a.join()
 
     return ret
 
@@ -100,11 +101,7 @@ def thread_word_search(word, ret, model, make_simple,
                        lock, ylst, i, model_name):
     '''
     The actual word search, here so I can run in threads.
-    Grabs a lock.
-    Does some voodoo
-    releases the lock.
     '''
-    lock.acquire()
     pos = pos_tag([word.lower()])[0][1]
     if pos in make_simple:
         # it's the sort of thing we'd replace...
@@ -142,7 +139,6 @@ def thread_word_search(word, ret, model, make_simple,
             ret[word] = [(word, 0.0)]
     else:
         ret[word] = [(word, 0.0)]
-    lock.release()
     if i % 50 == 0:
         args = (model_name + '_sim_dict.pickle', ret, lock)
         a = Thread(target=save_to_pickle, args=args)
@@ -385,7 +381,7 @@ if __name__ == '__main__':
     model = get_google()
     # else:
     #     model = get_sentence_model()
-    d = get_sims('test', model)
+    d = get_sims('basic_english', model)
     G, d = make_graph_model(d)
     for i, a in enumerate(nx.connected_components(G)):
         print "Saving Graph {}".format(i)
