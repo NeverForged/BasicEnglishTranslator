@@ -41,12 +41,12 @@ Given how long *gensim* functions take to run, forcing a user to wait for *gensi
 <img align="left" src="/images/spoon_graph.png" alt="Graph model of 'Spork' to Spoon"></section>
 
 ## **Future Plans**
--[ ] **N-Grams/Phraser** Applying a phraser to the text to be translated, and incorporating n-grams in the modeling, would allow for phrase to word and word to phrase translations, though may add computational time to the end-user, which is why *gensim* modeling in the main translation was avoided in the first place.
--[ ] **Model Books Written in Basic English** Charles K. Ogden wrote books in *Basic English* to show that his theory worked; running a *gensim* model on these texts would allow for:
-    -[ ] *A better starting dictionary* based on which variants of each *Basic English* word is actually used, rather than running through a list of prefixes and suffixes and assuming all were valid.
-    -[ ] *Ogden's original semantic meaning* being preserved.  The model used here uses the words as they were used in Google News; *Basic English* has specific [semantic rules](http://ogden.basic-english.org/rules.html) that would be better preserved through this process.
-    -[ ] *Phrases* would be available as stated in (1), which would help translate more complex ideas.
--[ ] **Use a more "American" word list/theory** since Charles K Ogden was British, you may notice that *pants* are replaced with *trousers*; finding a different model to use based on research done in the US for English Language Learner populations may make for a more useful model, at least for American ELL students.
+1. -[ ] **N-Grams/Phraser** Applying a phraser to the text to be translated, and incorporating n-grams in the modeling, would allow for phrase to word and word to phrase translations, though may add computational time to the end-user, which is why *gensim* modeling in the main translation was avoided in the first place.
+2. -[ ] **Model Books Written in Basic English** Charles K. Ogden wrote books in *Basic English* to show that his theory worked; running a *gensim* model on these texts would allow for:
+    * -[ ] *A better starting dictionary* based on which variants of each *Basic English* word is actually used, rather than running through a list of prefixes and suffixes and assuming all were valid.
+    * -[ ] *Ogden's original semantic meaning* being preserved.  The model used here uses the words as they were used in Google News; *Basic English* has specific [semantic rules](http://ogden.basic-english.org/rules.html) that would be better preserved through this process.
+    * -[ ] *Phrases* would be available as stated in (1), which would help translate more complex ideas.
+3. -[ ] **Use a more "American" word list/theory** since Charles K Ogden was British, you may notice that *pants* are replaced with *trousers*; finding a different model to use based on research done in the US for English Language Learner populations may make for a more useful model, at least for American ELL students.
 
 ## **Deployment**
 To use the program, go to [www.BasicEnglishTranslator.com](http://www.basicenglishtranslator.com/).
