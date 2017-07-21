@@ -1,10 +1,11 @@
+import time
+import random
+import requests
+import nltk.data
+import pandas as pd
 import cPickle as pickle
 from bs4 import BeautifulSoup
-import requests
-import pandas as pd
-import random
-import time
-import nltk.data
+
 
 def main():
     '''
@@ -13,12 +14,6 @@ def main():
     intelligent connections to build a dictionary that won't be so news-focused
     '''
     basic = list(pd.read_csv('../data/basic_english_wordlist.csv')['WORDS'])
-    basic = basic + 'Architecture Communication Electronics Engineering Farming Health Industry Medicine Transport Weather'.lower().split(' ')
-    basic = basic + u'Anthropology Archaeology Geography Education History Language Philosophy Psychology Sociology Teaching Vocabulary'.lower().split(' ')
-    basic = basic + u'Animation Art Book Cooking Custom Culture Dance Family Games Game Gardening Leisure Movies and films Music Radio Sport Theatre Travel Television Movie'.lower().split(' ')
-    basic = basic + u'Algebra Astronomy Biology Chemistry Computer science Earth science Ecology Geometry Mathematics Physics Statistics Zoology Horse'.lower().split(' ')
-    basic = basic + u'Copyright Defense Economics Government Human rights Law Military Politics Trade France French_Revolution War Sword Gun Democracy Execution'.lower().split(' ')
-    basic = basic + u"Atheism Baha'i Buddhism Christianity Esotericism Hinduism Islam Jainism Judaism Mythology Paganism Sect Sikhism Taoism Theology".lower().split(' ')
     basic = list(set(basic))
     basic.sort()
     print len(basic)
@@ -41,7 +36,8 @@ def main():
                 # Load in sentences
                 MyText = MyText.encode('ascii', 'replace')
                 try:
-                    sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
+                    sentences = pickle.load(open('../data/sentences.pickle',
+                                                 'rb'))
                 except:
                     print 'No sentences saved.'
                 sent = book_to_sentences(MyText, tokenizer)
@@ -53,19 +49,21 @@ def main():
                 with open('../data/wikipedia.pickle', 'wb') as handle:
                     pickle.dump(articles, handle,
                                 protocol=pickle.HIGHEST_PROTOCOL)
-                print '{} - {} ({:.2f}s)'.format('simple_'+word, len(sentences),
+                print '{} - {} ({:.2f}s)'.format('simple_'+word,
+                                                 len(sentences),
                                                  time.clock() - start)
             except:
                 print 'Failure....likely request'
         if 'en_' + word not in articles:
-        # now add in en...
+            # now add in en...
             try:
                 item = '/wiki/' + word
                 r = requests.get('https://en.wikipedia.org'+item)
                 soup = BeautifulSoup(r.content, 'html.parser')
                 tags = soup.find_all('p')
                 try:
-                    sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
+                    sentences = pickle.load(open('../data/sentences.pickle',
+                                                 'rb'))
                 except:
                     print 'No sentences saved.'
                 MyText = '\n'.join([tag.get_text() for tag in tags])
@@ -85,6 +83,7 @@ def main():
             except:
                 print 'Failure....likely request'
 
+
 def book_to_sentences(input_text, tokenizer, remove_stopwords=False):
     # Function to split a review into parsed sentences. Returns a
     # list of sentences, where each sentence is a list of words
@@ -103,6 +102,7 @@ def book_to_sentences(input_text, tokenizer, remove_stopwords=False):
     # Return the list of sentences (each sentence is a list of words,
     # so this returns a list of lists
     return sentences
+
 
 def book_to_wordlist(book_text, remove_stopwords=False):
     # Function to convert a document to a sequence of words,
