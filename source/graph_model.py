@@ -224,7 +224,7 @@ def make_graph_model(d):
             if len(item[0]) > 1 and len(key) > 1: # avoid 'i'
                 try:
                     # avoid spanish words
-                    print = '{} {}                    \r'.format(item[0], key),
+                    print '{} {}                      \r'.format(item[0], key),
                     G.add_edge(item[0].lower(), key.lower(), weight=item[1])
                 except:
                     pass
