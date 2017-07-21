@@ -130,7 +130,7 @@ def thread_word_search(word, ret, model, make_simple,
                 # check which don't match with the original word
                 rem = model.doesnt_match(wlst + [word])
                 # avoid errors
-                if rem != word:
+                if rem != word: # if it does that's... not great
                     nlst.pop(wlst.index(rem))
             # make sure it's a list (of tuples)
             if type(nlst) != list:
@@ -148,7 +148,8 @@ def thread_word_search(word, ret, model, make_simple,
 
 def save_to_pickle(name, info, lock):
     '''
-    In a function to avoid kboard interruptions
+    In a function to avoid keyboard interruptions creating EOF errors and
+    forcing restart of long operations.
     '''
     lock.acquire()
     with open('../data/' + name, 'wb') as handle:
@@ -223,14 +224,14 @@ def make_graph_model(d):
             if len(item[0]) > 1 and len(key) > 1: # avoid 'i'
                 try:
                     # avoid spanish words
-                    s = '{} {}'.format(item[0], key)
+                    print = '{} {}                    \r'.format(item[0], key),
                     G.add_edge(item[0].lower(), key.lower(), weight=item[1])
                 except:
                     pass
     print 'G took {:.2f}s'.format(time.clock() - start)
     return G, d
 
-def make_dictionary(a, G, input_d):
+def make_dictionary(G, input_d):
     '''
     This makes a dictionary based on an input_d which is usually created
     by some other process (basic_english dictionary maker, self.words from
@@ -252,10 +253,8 @@ def make_dictionary(a, G, input_d):
     lst.sort(key=len, reverse=True)
     vocab = vocab + lst
     start = time.clock()
-    # make a dictionary...
-    # temp = nx.all_pairs_dijkstra_path_length(G, cutoff=10, weight='weight')
     try:
-        paths = pickle.load(open('../data/' + a + 'temp_paths.pickle', 'rb'))
+        paths = pickle.load(open('../data/basictemp_paths.pickle', 'rb'))
     except:
         print 'Pathfinder - Started'
         paths = defaultdict(list)
@@ -264,6 +263,7 @@ def make_dictionary(a, G, input_d):
         for i, word in enumerate(vocab):
             # temp = dictionary of source -> diction of target -> length
             try:
+                # find all paths to word..
                 temp = nx.single_source_dijkstra_path_length(G, word,
                                                             weight='weight',
                                                             cutoff=5)
@@ -325,8 +325,9 @@ def make_dictionary(a, G, input_d):
                                         pos]
         except:
             print key, paths[key],
+        # screen indicator
         per = 100.0*i/float(len(paths))
-        print '    Dictionary: {:.0f}%           \r'.format(per),
+        print '    Dictionary: {:.2f}%           \r'.format(per),
 
     # make sure BE words track to self...
     df = pd.read_csv('../data/basic_english_wordlist.csv')
@@ -344,19 +345,15 @@ def make_dictionary(a, G, input_d):
     return input_d
 
 
-def set_words(author, lock):
+def set_words():
     '''
-    Using threading to make multiple Author's at once.
+    Sets dictionary based on input dictionary from book list.
     '''
-    # lock.acquire()
-    # first, need to grab the dictionary of the Author...
     print 'Set Words started'
-    a = author.encode('ascii', 'replace')
-    a = a.lower().strip().replace(' ','_')
     missing = 0
-    newd = pickle.load(open('../data/basic_english - Copy.pickle', 'rb'))
+    newd = pickle.load(open('../data/basic_english_book_words.pickle', 'rb'))
     keys = newd.keys()
-    thed = make_dictionary(a, G, newd)
+    thed = make_dictionary(G, newd)
     for key in keys:
         try:
             alpha = thed[key]
@@ -368,7 +365,6 @@ def set_words(author, lock):
         with open('../data/basic_english.pickle', 'wb') as handle:
                 pickle.dump(thed, handle,
                             protocol=pickle.HIGHEST_PROTOCOL)
-    # lock.release()
 
 def clean_word(word):
     '''
@@ -380,11 +376,10 @@ def clean_word(word):
 
 if __name__ == '__main__':
     model = get_google()
-    # else:
-    #     model = get_sentence_model()
     d = get_sims('basic_english', model)
     G, d = make_graph_model(d)
-    for i, a in enumerate(nx.connected_components(G)):
-        print "Saving Graph {}".format(i)
-        with open('../data/graph_' + str(i) + '.pickle', 'wb') as handle:
-            pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    del model
+    lock = threading.Lock()
+    lst = ['Basic']
+    # lets do this...
+    set_words()
