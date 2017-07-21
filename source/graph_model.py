@@ -1,20 +1,18 @@
-import time
-import gensim
-import build_model as bm
-import string
-from nltk import pos_tag
-from collections import defaultdict
-import cPickle as pickle
-import networkx as nx
-import nxpd as nxpd
-import sys
-import numpy as np
-import threading
-from threading import Thread
-import string
-import unicodedata
 import re
+import sys
+import time
+import string
+import gensim
+import threading
+import numpy as np
 import pandas as pd
+import nxpd as nxpd
+import networkx as nx
+import cPickle as pickle
+from nltk import pos_tag
+import build_model as bm
+from threading import Thread
+
 
 def find_sims(model, model_name):
     '''
@@ -30,7 +28,8 @@ def find_sims(model, model_name):
     # lock to protect dictionary...
     lock = threading.Lock()
     try:
-        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle', 'rb'))
+        ret = pickle.load(open('../data/' + model_name + '_sim_dict.pickle',
+                               'rb'))
     except:
         ret = {}
         # list of parts of speech to simplify
@@ -62,7 +61,7 @@ def find_sims(model, model_name):
                        'WRB'  # WRB: Wh-adverb
                        ]
         start = time.clock()
-
+        # list for filters
         ylst = list('?!12345678"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c')
         keys_length = float(len(model.vocab.keys()))
         for i, word in enumerate(model.vocab.keys()):
@@ -95,8 +94,8 @@ def find_sims(model, model_name):
         a = Thread(target=save_to_pickle, args=args)
         a.start()
         a.join()
-
     return ret
+
 
 def thread_word_search(word, ret, model, make_simple,
                        lock, ylst, i, model_name):
@@ -130,7 +129,7 @@ def thread_word_search(word, ret, model, make_simple,
                 # check which don't match with the original word
                 rem = model.doesnt_match(wlst + [word])
                 # avoid errors
-                if rem != word: # if it does that's... not great
+                if rem != word:  # if it does that's... not great
                     nlst.pop(wlst.index(rem))
             # make sure it's a list (of tuples)
             if type(nlst) != list:
@@ -146,6 +145,7 @@ def thread_word_search(word, ret, model, make_simple,
         a.start()
         a.join()
 
+
 def save_to_pickle(name, info, lock):
     '''
     In a function to avoid keyboard interruptions creating EOF errors and
@@ -156,7 +156,12 @@ def save_to_pickle(name, info, lock):
             pickle.dump(info, handle, protocol=pickle.HIGHEST_PROTOCOL)
     lock.release()
 
+
 def get_sims(model_name, model):
+    '''
+    The sims model is where I grab two best matches by cosine similarity, save
+    as 'sine similarity squared'
+    '''
     missing = 0
     try:
         # grab the sims model, check if complete
@@ -176,6 +181,7 @@ def get_sims(model_name, model):
         ret = find_sims(model, model_name)
     return ret
 
+
 def get_google():
     '''
     Loads google news word2vec model
@@ -187,27 +193,10 @@ def get_google():
         model = gensim.models.KeyedVectors.load_word2vec_format(b, binary=True)
     except:
         model = gensim.models.Word2Vec.load(b)
-    model.init_sims(replace=True) # save memory
+    model.init_sims(replace=True)  # save memory
     print "This took only {:.3f}s".format(time.clock()-start)
     return model
 
-def get_sentence_model(remake=False):
-    '''
-    Loads or builds a model based on the sentences in the data folder.
-    '''
-    start = time.clock()
-    if remake:
-        model = bm.build_model()
-    else:
-        b = '../model/300features_5min_word_count_10context.npy'
-        try:
-            model = gensim.models.KeyedVectors.load_word2vec_format(b,
-                                                        binary=True)
-        except:
-            model = gensim.models.Word2Vec.load(b)
-        model.init_sims(replace=True) # save memory
-        print "This took only {:.3f}s".format(time.clock()-start)
-    return model.wv
 
 def make_graph_model(d):
     '''
@@ -216,12 +205,12 @@ def make_graph_model(d):
     # now, to make lines for nx... edgelist
     start = time.clock()
     lines = []
-    G=nx.Graph()
+    G = nx.Graph()
     for key in d.keys():
         G.add_edge(key.lower(), key.lower(), weight=0.0)
         for item in d[key]:
             # check that word works before adding to model
-            if len(item[0]) > 1 and len(key) > 1: # avoid 'i'
+            if len(item[0]) > 1 and len(key) > 1:  # avoid 'i'
                 try:
                     # avoid spanish words
                     print '{} {}                      \r'.format(item[0], key),
@@ -230,6 +219,7 @@ def make_graph_model(d):
                     pass
     print 'G took {:.2f}s'.format(time.clock() - start)
     return G, d
+
 
 def make_dictionary(G, input_d):
     '''
@@ -265,15 +255,15 @@ def make_dictionary(G, input_d):
             try:
                 # find all paths to word..
                 temp = nx.single_source_dijkstra_path_length(G, word,
-                                                            weight='weight',
-                                                            cutoff=5)
+                                                             weight='weight',
+                                                             cutoff=5)
             except:
                 temp = {}
             tkeys = temp.keys()
             for n, key in enumerate(tkeys):
                 # compare sin^2 similarity length
                 if clean_word(key) != key and clean_word(key) in tkeys:
-                   # skip it, it's pos will throw us off
+                    # skip it, it's pos will throw us off
                     pass
                 elif clean_word(key) not in input_d and len(key) > 2:
                     try:
@@ -365,6 +355,7 @@ def set_words():
         with open('../data/basic_english.pickle', 'wb') as handle:
                 pickle.dump(thed, handle,
                             protocol=pickle.HIGHEST_PROTOCOL)
+
 
 def clean_word(word):
     '''

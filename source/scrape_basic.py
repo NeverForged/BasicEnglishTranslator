@@ -13,7 +13,8 @@ from collections import defaultdict
 from nltk import pos_tag, word_tokenize
 from gensim.models.phrases import Phrases, Phraser
 from sklearn.feature_extraction.text import CountVectorizer
-headers = {"User-Agent":"Mozilla/5.0"}
+headers = {"User-Agent": "Mozilla/5.0"}
+
 
 def main():
     '''
@@ -60,7 +61,8 @@ def main():
                link + 'koran100.html']
         # history...
         for i in xrange(1, 13):
-            lst.append(  'http://ogden.basic-english.org/ghos' + str(i) + '.html')
+            lst.append('http://ogden.basic-english.org/ghos' + str(i) +
+                       '.html')
         # bible...
         r = requests.get('http://ogden.basic-english.org/bbe/bbe.html')
         soup = BeautifulSoup(r.content, 'html.parser')
@@ -68,7 +70,8 @@ def main():
         for table in soup.findAll('table'):
             for link in table.findAll('a'):
                 try:
-                    lst_b.append(link.get('href')[:link.get('href').index('#')])
+                    lst_b.append(link.get('href')[:link.get('href')
+                                                  .index('#')])
                 except:
                     lst_b.append(link.get('href'))
         # printable filtering to avoid errors
@@ -89,7 +92,7 @@ def main():
                 book.clean()
                 book.remove_stop_words()
                 books_in += 1
-            #add to the corpus
+            # add to the corpus
             corpus.append(book)
             print 'scraping {:.2f}%  Books:{}\r'.format(100.0*i/length,
                                                         books_in),
@@ -102,7 +105,7 @@ def main():
     vec_set = get_vectorize_set(corpus)
     data_features = vectorize_books(vec_set)
     model, bigrams = word_2_vec(sentences)
-    model.init_sims(replace=True) # for memory
+    model.init_sims(replace=True)  # for memory
     words = {}
     make_simple = ['CC',  # CC: conjunction, coordinating
                    'DT',  # DT: determiner
@@ -143,12 +146,14 @@ def main():
     with open('../data/basic_english_book_words.pickle', 'wb') as handle:
             pickle.dump(words, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+
 def clean_word(word):
     '''
     Moving a lot of functions here for speed
     '''
     check_clean = word.encode('ascii', 'replace')
     return check_clean.strip(string.punctuation).lower()
+
 
 def tokenize_books(corpus):
     '''
@@ -163,6 +168,7 @@ def tokenize_books(corpus):
     sentences = sentences
     return sentences
 
+
 def get_vectorize_set(corpus):
     '''
     '''
@@ -173,16 +179,17 @@ def get_vectorize_set(corpus):
         [to_vectorize.append(word) for word in book.meaningful_words]
     return to_vectorize
 
+
 def word_2_vec(sentences):
     '''
     Word to vec operation...
     '''
-    adj =['JJR','JJS','RB', 'RBR','RBS', 'JJ', 'DT', 'CD']
-    noun = ['NN', 'NNS', 'VB', 'VBD','VBG','VBN', 'VBP', 'VBZ']
+    adj = ['JJR', 'JJS', 'RB', 'RBR', 'RBS', 'JJ', 'DT', 'CD']
+    noun = ['NN', 'NNS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     # Import the built-in logging module and configure it so that Word2Vec
     # creates nice output messages
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',\
-        level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                        level=logging.INFO)
 
     # Set values for various parameters
     num_features = 300    # Word vector dimensionality
@@ -197,9 +204,9 @@ def word_2_vec(sentences):
     model = word2vec.Word2Vec(sentences,
                               workers=num_workers,
                               size=num_features,
-                              min_count = min_word_count,
-                              window = context,
-                              sample = downsampling)
+                              min_count=min_word_count,
+                              window=context,
+                              sample=downsampling)
 
     # If you don't plan to train the model any further, calling
     # init_sims will make the model much more memory-efficient.
@@ -211,7 +218,7 @@ def word_2_vec(sentences):
     bigrams = defaultdict(list)
     fails = 0
     for sentence in make_bigrams[sentences]:
-         for item in sentence:
+        for item in sentence:
             if '_' in item:
                 lst = item.split('_')
                 if len(lst) == 2:
@@ -227,16 +234,17 @@ def word_2_vec(sentences):
     model.save('../model/basic_english_only.bin')
     return model, bigrams
 
+
 def vectorize_books(vectorize_set):
     '''
     '''
     # Initialize the "CountVectorizer" object, which is scikit-learn's
     # bag of words tool.
-    vectorizer = CountVectorizer(analyzer = "word",
-                                 tokenizer = None,
-                                 preprocessor = None,
-                                 stop_words = None,
-                                 max_features = 5000)
+    vectorizer = CountVectorizer(analyzer="word",
+                                 tokenizer=None,
+                                 preprocessor=None,
+                                 stop_words=None,
+                                 max_features=5000)
 
     # fit_transform() does two functions: First, it fits the model
     # and learns the vocabulary; second, it transforms our training data
@@ -245,14 +253,15 @@ def vectorize_books(vectorize_set):
     data_features = vectorizer.fit_transform(vectorize_set)
     return data_features
 
-def book_to_sentences(book, remove_stopwords=False ):
+
+def book_to_sentences(book, remove_stopwords=False):
     '''
     Function to split a review into parsed sentences. Returns a
     list of sentences, where each sentence is a list of words
     '''
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
     # 1. Use the NLTK tokenizer to split the paragraph into sentences
-    raw_sentences = tokenizer.tokenize(book.text.encode("ascii","ignore")
+    raw_sentences = tokenizer.tokenize(book.text.encode("ascii", "ignore")
                                        .strip())
     #
     # 2. Loop over each sentence
@@ -268,7 +277,7 @@ def book_to_sentences(book, remove_stopwords=False ):
     return sentences
 
 
-def book_to_wordlist(book_text, remove_stopwords=False ):
+def book_to_wordlist(book_text, remove_stopwords=False):
     '''
     Function to convert a document to a sequence of words,
     optionally removing stop words.  Returns a list of words.
@@ -276,7 +285,7 @@ def book_to_wordlist(book_text, remove_stopwords=False ):
     words = book_text.lower().split()
     if remove_stopwords:
         stops = set(stopwords.words("english"))
-        words = [w for w in words if not w in stops]
+        words = [w for w in words if w not in stops]
     return words
 
 
@@ -319,14 +328,14 @@ class Book:
         self.clean_text = filter(lambda x: x in prt, self.clean_text)
         self.clean_text = self.clean_text.strip(string.punctuation)
         # Remove spaces.
-        self.clean_text = self.clean_text.replace("  "," ")
+        self.clean_text = self.clean_text.replace("  ", " ")
         while "  " in self.clean_text:
-            self.clean_text = self.clean_text.replace("  "," ")
+            self.clean_text = self.clean_text.replace("  ", " ")
 
     def remove_stop_words(self):
         stops = set(stopwords.words("english"))
         words = self.clean_text.split()
-        self.meaningful_words = [w for w in words if not w in stops]
+        self.meaningful_words = [w for w in words if w not in stops]
 
     def __getitem__(self, index):
         if index == 0:

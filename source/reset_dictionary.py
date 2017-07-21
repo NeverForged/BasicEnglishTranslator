@@ -1,9 +1,10 @@
-import make_dictionary as md
-import gensim
-import build_model as mm
-from BasicEnglishTranslator import BasicEnglishTranslator
-import cPickle as pickle
 import time
+import gensim
+import cPickle as pickle
+import build_model as mm
+import make_dictionary as md
+from BasicEnglishTranslator import BasicEnglishTranslator
+
 
 def main():
     '''
@@ -31,7 +32,7 @@ def main():
     print '   ...took {:.3f}s - {}\n'.format(s3-s2, len(d))
 
     with open('../data/basic_english.pickle', 'wb') as handle:
-        pickle.dump(d,handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
     main()

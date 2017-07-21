@@ -1,17 +1,18 @@
+import re
+import sys
+import time
+import string
+import random
+import requests
+import nltk.data
 import pandas as pd
 import cPickle as pickle
-import nltk.data
+from bs4 import BeautifulSoup
+from collections import defaultdict
 from nltk import pos_tag, word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
-import string
-import re
-import time
-from bs4 import BeautifulSoup
-import requests
-import sys
-import random
-from collections import defaultdict
+
 
 class BasicEnglishTranslator():
     '''
@@ -47,12 +48,15 @@ class BasicEnglishTranslator():
         '''
         # Dictionary
         # check valid dictionary
-        d_name = '../data/basic_english.pickle'
-        self.class_dictionary = pickle.load(open(d_name, "rb"))
-        self.save_dictionary = self.class_dictionary.copy()
+        if basic_dictionary is None:
+            d_name = '../data/basic_english.pickle'
+            self.class_dictionary = pickle.load(open(d_name, "rb"))
+        else:
+            self.class_dictionary = basic_dictionary
+        # set verbose
         self.verbose = verbose
 
-    def fit(self, input_text, add_model=False):
+    def fit(self, input_text, add_model=True):
         '''
         The actual translation occurs here:
         Methodology:
@@ -61,12 +65,14 @@ class BasicEnglishTranslator():
             Basic English words from the dictionary.
         Input: String
         '''
-        self.real_text = input_text
-        done = 0
+
         # timer...
         start = time.clock()
+        # printable filter
         prt = set(string.printable)
         input_text = filter(lambda x: x in prt, input_text)
+        # save input text
+        self.real_text = input_text
         # add to sentences for next time we rebuild our model...
         if add_model:
             input_sentences = self.book_to_sentences(input_text)
@@ -77,7 +83,6 @@ class BasicEnglishTranslator():
                             protocol=pickle.HIGHEST_PROTOCOL)
         words = pos_tag(word_tokenize(input_text))  # makes a list of words...
         self.real_list = words
-
         # These simply pass thru the model
         pass_thru = ['CD',  # CD: numeral, cardinal
                      'EX',  # EX: existential there
@@ -126,7 +131,6 @@ class BasicEnglishTranslator():
                        'WP$',  # WP$: WH-pronoun, possessive
                        'WRB'  # WRB: Wh-adverb
                        ]
-        done == 0
         count_replacements = 0
         self.lst_ret = []
         for idx, word in enumerate(words):
@@ -138,27 +142,22 @@ class BasicEnglishTranslator():
                 # bath it...
                 clean = word[0].strip(string.punctuation).lower()
                 # ...and bring it to the function
-                # already simple... throw it in and move
+                # already simple... throw it in and move on
                 if clean in self.class_dictionary:
                     temp = self.class_dictionary[clean][0]
                     self.lst_ret.append(self.retain_capitalization(temp,
                                                                    word[0]))
-                elif clean != '' and len(clean) > 3:
-                    # not alread simply/basic, and more than 3 letters
-                    # set as if we couldn't find it...
-                    self.lst_ret.append(self.retain_capitalization(clean,
-                                                                   word[0]))
-
+                else:
+                    self.lst_ret.append(word[0])
         end = time.clock()
-        # if self.verbose:
-        #     print 'Time: {:.4f}s'.format(end - start)
+        if self.verbose:
+            print 'Time: {:.4f}s'.format(end - start)
         txt = self.replace_punctuation(' '.join(self.lst_ret))
         txt = txt.encode('utf-8')
         txt = re.sub("\xe2\x80\x93", "-", txt)
         self.basic_list = self.lst_ret
         self.basic_text = txt
         return txt
-
 
     def retain_capitalization(self, new_word, original_word):
         '''
@@ -187,28 +186,26 @@ class BasicEnglishTranslator():
         text = text.replace(' )', ')')
         text = text.replace('$ ', '$')
         text = text.replace(' *', '*')
+        text = text.replace('_', ' ')  # space between phraser words
         return text
-
 
     def clean_word(self, word):
         '''
-        Moving a lot of functions here for speed
+        cleans a word.
         '''
         check_clean = word.encode('ascii', 'replace')
         return check_clean.strip(string.punctuation).lower()
 
-
-        # Define a function to split a book into parsed sentences
     def book_to_sentences(self, input_text, remove_stopwords=False):
-        # Function to split a review into parsed sentences. Returns a
-        # list of sentences, where each sentence is a list of words
-        #
-        # 1. Use the NLTK tokenizer to split the paragraph into sentences
+        '''
+        Function to split a book/text into parsed sentences. Returns a
+        list of sentences, where each sentence is a list of words
+        '''
+        # Use the NLTK tokenizer to split the paragraph into sentences
         tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
         raw_sentences = tokenizer.tokenize(
                         input_text.encode("ascii", "replace").strip())
-        #
-        # 2. Loop over each sentence
+        # Loop over each sentence
         sentences = []
         for raw_sentence in raw_sentences:
             # If a sentence is empty, skip it
@@ -216,25 +213,20 @@ class BasicEnglishTranslator():
                 # Otherwise, call review_to_wordlist to get a list of words
                 sentences.append(self.book_to_wordlist(raw_sentence,
                                                        remove_stopwords))
-        # Return the list of sentences (each sentence is a list of words,
-        # so this returns a list of lists
         return sentences
 
-
     def book_to_wordlist(self, book_text, remove_stopwords=False):
+        '''
         # Function to convert a document to a sequence of words,
         # optionally removing stop words.  Returns a list of words.
-        # 3. Convert words to lower case and split themstring.decode('utf-8')
+        '''
+        # Convert words to lower case and split them
         words = book_text.lower().split()
-        #
-        # 4. Optionally remove stop words (false by default)
+        # Optionally remove stop words (false by default)
         if remove_stopwords:
             stops = set(stopwords.words("english"))
             words = [w for w in words if w not in stops]
-        #
-        # 5. Return a list of words
         return words
-
 
 if __name__ == '__main__':
     start = time.clock()
@@ -276,7 +268,7 @@ if __name__ == '__main__':
                                       translator.real_list]
                     with open('../data/articles.pickle', 'wb') as handle:
                         pickle.dump(articles, handle,
-                        protocol=pickle.HIGHEST_PROTOCOL)
+                                    protocol=pickle.HIGHEST_PROTOCOL)
                     articles = {}
                     end = time.clock() - start
                     dic = translator.save_dictionary

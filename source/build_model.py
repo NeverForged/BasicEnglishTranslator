@@ -1,19 +1,16 @@
-import logging
-import sys
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords
 import re
+import sys
+import logging
 import nltk.data
-from gensim.models import word2vec
 import gensim as gensim
 import cPickle as pickle
+from nltk.corpus import stopwords
+from gensim.models import word2vec
+from nltk.stem import WordNetLemmatizer
 
 
-def main(num_features=300,
-         min_word_count=5,
-         num_workers=4,
-         context=10,
-         downsampling = 1e-3):
+def main(num_features=300, min_word_count=5, num_workers=4,
+         context=10, downsampling=1e-3):
     '''
     Function to turn my sentences into a model.
     num_features = 300    # Word vector dimensionality
@@ -24,19 +21,18 @@ def main(num_features=300,
     sentences = []
     sentences = pickle.load(open('../data/sentences.pickle', 'rb'))
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',\
-    level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                        level=logging.INFO)
 
     # Initialize and train the model (this will take some time)
-
     model = word2vec.Word2Vec(sentences, workers=num_workers,
-                              size=num_features, min_count = min_word_count,
-                              window = context, sample = downsampling)
+                              size=num_features, min_count=min_word_count,
+                              window=context, sample=downsampling)
 
     # If you don't plan to train the model any further, calling
     # init_sims will make the model much more memory-efficient.
     model.init_sims(replace=True)
-    # since I will remake rather than retrain...
+    # Seriously, add this to speed up gensim functions.
 
     # It can be helpful to create a meaningful model name and
     # save the model for later use. You can load it later using Word2Vec.load()
@@ -45,8 +41,6 @@ def main(num_features=300,
                   str(context) + 'context.npy')
 
     model.save('../model/'+model_name)
-    # model = gensim.models.KeyedVectors.load_word2vec_format(
-    #         '../model/300features_4min_word_count_10context.npy', binary=True)
     return model
 
 
