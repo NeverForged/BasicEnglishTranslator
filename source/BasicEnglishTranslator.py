@@ -56,7 +56,7 @@ class BasicEnglishTranslator():
         # set verbose
         self.verbose = verbose
 
-    def fit(self, input_text, add_model=True):
+    def fit(self, input_text, add_model=False):
         '''
         The actual translation occurs here:
         Methodology:
