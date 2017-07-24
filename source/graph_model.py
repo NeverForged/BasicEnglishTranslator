@@ -219,6 +219,8 @@ def make_graph_model(d):
                 except:
                     pass
     print 'G took {:.2f}s'.format(time.clock() - start)
+    with open('../data/graph.pickle', 'wb') as handle:
+            pickle.dump(G, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return G, d
 
 
@@ -233,7 +235,7 @@ def make_dictionary(G, input_d):
     (aka 1 - cosine similarity^2), to each 'valid' word given by the input
     dictionary, in order from longest to shortest words.  If another word has a
     'shorter' (by edge = 1 measurement) path, it replaces it until all words
-    that are in a graph with words in our dictionary have been mapped.
+    that are in a with words in our dictionary have been mapped.
     '''
     vocab = input_d.keys()
     vocab.sort()
