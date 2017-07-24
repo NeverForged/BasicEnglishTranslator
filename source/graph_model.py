@@ -364,6 +364,7 @@ def clean_word(word):
     word = filter(lambda x: x in prt, word)
     return word.lower()
 
+
 if __name__ == '__main__':
     model = get_google()
     d = get_sims('basic_english', model)
