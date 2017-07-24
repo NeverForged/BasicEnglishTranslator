@@ -12,6 +12,7 @@ import cPickle as pickle
 from nltk import pos_tag
 import build_model as bm
 from threading import Thread
+from collections import defaultdict
 
 
 def find_sims(model, model_name):
