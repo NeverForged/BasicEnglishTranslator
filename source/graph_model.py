@@ -274,7 +274,7 @@ def make_dictionary(G, input_d):
                     length_n = temp[key]
                     if length > length_n:
                         # _, p = nx.nx.single_source_dijkstra(G, key, word)
-                        paths[clean_word(key)] = (word, temp[key])
+                        paths[clean_word(key)] = (clean_word(word), temp[key])
                     if n % 4 == 0:
                         print 'Pathfinder:  {:.2f}% / \r'.format(per),
                     elif n % 3 == 0:
@@ -330,7 +330,7 @@ def make_dictionary(G, input_d):
     with open('../data/basic_english.pickle', 'wb') as handle:
             pickle.dump(d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     print 'Dictionary Made, Took {:.2f}s'.format(time.clock() - start)
-    with open('../data/temp_basic_english.pickle', 'wb') as handle:
+    with open('../data/basic_english.pickle', 'wb') as handle:
             pickle.dump(input_d, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return input_d
 
