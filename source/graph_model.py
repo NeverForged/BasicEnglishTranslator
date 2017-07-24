@@ -302,7 +302,6 @@ def make_dictionary(G, input_d):
         try:
             pos = pos_tag([paths[key][0]])[0][1]
             _, p = nx.nx.single_source_dijkstra(G, key, paths[key][0])
-
             # i still don't trust the pos tagging
             # if pos == pos_tag([paths[key][0]]):
             try:
@@ -314,7 +313,7 @@ def make_dictionary(G, input_d):
                                         paths[key][0].lower(),
                                         pos]
         except:
-            print key, paths[key],
+            pass
         # screen indicator
         per = 100.0*i/float(len(paths))
         print '    Dictionary: {:.2f}%           \r'.format(per),
@@ -353,8 +352,7 @@ def set_words():
     # save it...
     if missing == 0:
         with open('../data/basic_english.pickle', 'wb') as handle:
-                pickle.dump(thed, handle,
-                            protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump(thed, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def clean_word(word):
