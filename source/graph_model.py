@@ -245,7 +245,7 @@ def make_dictionary(G, input_d):
     vocab = vocab + lst
     start = time.clock()
     try:
-        paths = pickle.load(open('../data/basictemp_paths.pickle', 'rb'))
+        paths = pickle.load(open('../data/temp_paths.pickle', 'rb'))
     except:
         print 'Pathfinder - Started'
         paths = defaultdict(list)
