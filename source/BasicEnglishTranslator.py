@@ -271,10 +271,7 @@ if __name__ == '__main__':
                                     protocol=pickle.HIGHEST_PROTOCOL)
                     articles = {}
                     end = time.clock() - start
-                    dic = translator.save_dictionary
-                    print "{} of {} - {}: {:.2f}s ({})".format(i, abc, item,
-                                                               end, len(dic))
+                    print "{} of {} - {}: {:.2f}s".format(i, abc, item, end)
             except:
                 pass
         end = time.clock() - start
-        dic = translator.save_dictionary
