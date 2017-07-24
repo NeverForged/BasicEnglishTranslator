@@ -293,7 +293,7 @@ def make_dictionary(G, input_d):
             else:
                 print 'Pathfinder:  {:.2f}% | \r'.format(per),
         print 'Paths Found, Took {:.2f}s'.format(time.clock() - start)
-        with open('../data/' + a + 'temp_paths.pickle', 'wb') as handle:
+        with open('../data/temp_paths.pickle', 'wb') as handle:
                 pickle.dump(paths, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # now set our dictionary
