@@ -349,7 +349,7 @@ def set_words():
             alpha = thed[key]
         except:
             missing += 1
-    print '{} missing {} entries'.format(missing)
+    print 'missing {} entries'.format(missing)
     # save it...
     if missing == 0:
         with open('../data/basic_english.pickle', 'wb') as handle:
