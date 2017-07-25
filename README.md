@@ -32,7 +32,7 @@ Given how long *gensim* functions take to run, forcing a user to wait for *gensi
     * Already Simple text was reduced in complexity by an average of 0.16 grade levels.
     * More complex text was reduced by an average of 0.71 grade levels.
 
-    This method did create a number of issues, namely complex words that are similar to *Basic English* words creeping into the model; see below for an example, where chip of wood -> microprocessor of wood.  When basing the starting dictionary off of a *word-2-vec* model of [actual *Basic English* texts](http://ogden.basic-english.org/texts.html):
+* This method did create a number of issues, namely complex words that are similar to *Basic English* words creeping into the model; see below for an example, where chip of wood -> microprocessor of wood.  When basing the starting dictionary off of a *word-2-vec* model of [actual *Basic English* texts](http://ogden.basic-english.org/texts.html):
     * **Simple English Wikipedia** texts dropped half a grade level.
     * Regular (English) **Wikipedia** texts dropped a full grade level.
 
