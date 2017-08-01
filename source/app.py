@@ -1,5 +1,9 @@
 import sys
 import cPickle as pickle
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from Appearance import Appearance
 from BasicEnglishTranslator import BasicEnglishTranslator
 from flask import Flask, render_template, request, jsonify, redirect
 
@@ -8,11 +12,19 @@ app = Flask(__name__)
 
 @app.route('/draw/<specs>.png')
 def draw(specs):
-    n = len(specs)
-    f = '/static/images/neverforged_logo.png'
-    if n % 2 == 0:
-        f = '/static/images/neverforged_logo_w.png'
-    return redirect(f)
+    '''
+    Not part of the basic english translator, but part of a different project
+    placing here since I don't want to create another ec2 instance for that
+    project yet.
+    '''
+        #if not os.path.exists('/static/images/' + self.specs + '.png'):
+    print('need to draw this combination')
+    fig, ax = plt.subplots(1, figsize=(4.0, 6.0))
+    appr = Appearance(None, None, ax, specs)
+    appr.draw_char()
+    appr.show()
+    # return redirect("../source/static/images/" + specs + ".png", code=302)
+    return redirect('/static/images/temp.png')
 
 # load page when someone hits the site
 @app.route('/', methods=['GET'])
