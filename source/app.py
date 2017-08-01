@@ -1,7 +1,7 @@
 import sys
 import cPickle as pickle
 from BasicEnglishTranslator import BasicEnglishTranslator
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 
 app = Flask(__name__)
 @app.route('/process', methods=['POST'])
